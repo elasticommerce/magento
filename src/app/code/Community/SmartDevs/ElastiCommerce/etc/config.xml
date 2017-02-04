@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * elasticommerce module declarations
+ */
+-->
+<config>
+    <modules>
+        <SmartDevs_ElastiCommerce>
+            <version>1.0.0</version>
+        </SmartDevs_ElastiCommerce>
+    </modules>
+    <global>
+        <blocks>
+            <elasticommerce>
+                <class>SmartDevs_ElastiCommerce_Block</class>
+            </elasticommerce>
+        </blocks>
+        <helpers>
+            <elasticommerce>
+                <class>SmartDevs_ElastiCommerce_Helper</class>
+            </elasticommerce>
+        </helpers>
+        <models>
+            <elasticommerce>
+                <class>SmartDevs_ElastiCommerce_Model</class>
+                <resourceModel>elasticommerce_resource</resourceModel>
+            </elasticommerce>
+            <elasticommerce_resource>
+                <class>SmartDevs_ElastiCommerce_Model_Resource</class>
+            </elasticommerce_resource>
+        </models>
+        <index>
+            <indexer>
+                <catalogsearch_fulltext>
+                    <model>elasticommerce/rewrite_fulltext</model>
+                </catalogsearch_fulltext>
+                <elasticommerce>
+                    <model>elasticommerce/indexer</model>
+                </elasticommerce>
+            </indexer>
+        </index>
+        <cache>
+            <types>
+                <elasticommerce module="elasticommerce" translate="label description">
+                    <label>ElastiCommerce</label>
+                    <description>Caching for detected language supports, settings, mappings, analyzer</description>
+                    <tags>ELASTICOMMERCE</tags>
+                </elasticommerce>
+            </types>
+        </cache>
+    </global>
+    <adminhtml>
+        <layout>
+            <updates>
+                <elasticommerce>
+                    <file>elasticgento.xml</file>
+                </elasticommerce>
+            </updates>
+        </layout>
+    </adminhtml>
+    <elasticgento>
+        <entities>
+            <product>elasticommerce/indexer_entity_product</product>
+            <!--<category>elasticommerce/indexer_entity_category</category>-->
+            <!--<cms>elasticommerce/indexer_entity_cms_page</cms>-->
+        </entities>
+    </elasticgento>
+    <default>
+    </default>
+</config>

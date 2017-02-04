@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <SmartDevs_ElastiCommerce>
+            <active>true</active>
+            <codePool>community</codePool>
+            <depends>
+                <Mage_Catalog/>
+                <Mage_CatalogSearch/>
+                <Mage_Index/>
+            </depends>
+        </SmartDevs_ElastiCommerce>
+    </modules>
+</config>
