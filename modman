@@ -1,2 +1,3 @@
-src/app/etc/modules/SmartDevs_ElastiCommerce.xml                 app/etc/modules/SmartDevs_ElastiCommerce.xml
-src/app/code/community/SmartDevs/ElastiCommerce/                 app/code/community/SmartDevs/ElastiCommerce/
+src/app/etc/modules/SmartDevs_ElastiCommerce.xml                        app/etc/modules/SmartDevs_ElastiCommerce.xml
+src/app/code/community/SmartDevs/ElastiCommerce/                        app/code/community/SmartDevs/ElastiCommerce/
+src/app/design/adminhtml/default/default/layout/elasticommerce.xml      app/design/adminhtml/default/default/layout/elasticommerce.xml

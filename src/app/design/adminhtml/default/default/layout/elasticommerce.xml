@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--
+
+-->
+<layout>
+    <adminhtml_catalog_product_attribute_edit>
+        <reference name="attribute_edit_tabs">
+            <action method="addTabAfter">
+                <name>attribute_edit_tab_elasticommerce</name>
+                <block>elasticommerce/adminhtml_catalog_product_attribute_edit_tab</block>
+                <after>labels</after>
+            </action>
+        </reference>
+    </adminhtml_catalog_product_attribute_edit>
+</layout>

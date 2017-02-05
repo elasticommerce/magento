@@ -54,7 +54,7 @@
         <layout>
             <updates>
                 <elasticommerce>
-                    <file>elasticgento.xml</file>
+                    <file>elasticommerce.xml</file>
                 </elasticommerce>
             </updates>
         </layout>

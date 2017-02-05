@@ -23,7 +23,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer extends Mage_Index_Model_Indexer_Ab
     /**
      * Retrieve Catalog Indexer model
      *
-     * @return Infinitescale_Elasticgento_Model_Indexer_Elasticsearch
+     * @return SmartDevs_ElastiCommerce_Model_Indexer
      */
     protected function _getIndexer()
     {
@@ -34,7 +34,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer extends Mage_Index_Model_Indexer_Ab
      * Process event
      *
      * @param Mage_Index_Model_Event $event
-     * @return Elasticgento_Catalog_Model_Product_Indexer
+     * @return SmartDevs_ElastiCommerce_Model_Indexer
      */
     protected function _processEvent(Mage_Index_Model_Event $event)
     {
@@ -55,7 +55,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer extends Mage_Index_Model_Indexer_Ab
     /**
      * Rebuild complete store index data
      *
-     * @return Elasticgento_Catalog_Model_Indexer_Catalog
+     * @return SmartDevs_ElastiCommerce_Model_Indexer
      */
     public function reindexAll()
     {
