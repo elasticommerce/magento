@@ -60,11 +60,11 @@
         </layout>
     </adminhtml>
     <elasticgento>
-        <entities>
-            <product>elasticommerce/indexer_entity_product</product>
-            <!--<category>elasticommerce/indexer_entity_category</category>-->
-            <!--<cms>elasticommerce/indexer_entity_cms_page</cms>-->
-        </entities>
+        <indexer_types>
+            <product>elasticommerce/indexer_type_product</product>
+            <category>elasticommerce/indexer_type_category</category>
+            <cms_page>elasticommerce/indexer_type_cmspage</cms_page>
+        </indexer_types>
     </elasticgento>
     <default>
     </default>

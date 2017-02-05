@@ -23,11 +23,11 @@ class SmartDevs_ElastiCommerce_Model_Indexer extends Mage_Index_Model_Indexer_Ab
     /**
      * Retrieve Catalog Indexer model
      *
-     * @return SmartDevs_ElastiCommerce_Model_Indexer
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
      */
     protected function _getIndexer()
     {
-        return Mage::getSingleton('elasticommerce/indexer_elasticsearch');
+        return Mage::getSingleton('elasticommerce/indexer_elasticommerce');
     }
 
     /**
