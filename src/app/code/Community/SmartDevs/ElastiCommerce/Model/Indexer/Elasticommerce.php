@@ -14,6 +14,13 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
     protected $_isFullReindex = false;
 
     /**
+     * all indexer type instances
+     *
+     * @var SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract[]
+     */
+    private $_indexerTypes = null;
+
+    /**
      * current store object
      *
      * @var Mage_Core_Model_Store
@@ -161,6 +168,31 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
     }
 
     /**
+     * get all indexer types
+     */
+    private function getIndexerTypes()
+    {
+        if (null === $this->_indexerTypes) {
+            foreach (Mage::getConfig()->getNode('elasticommerce/indexer_types')->children() as $name => $classAlias) {
+                //if $classname is a confg node force it to be string
+                if ($classAlias instanceof Mage_Core_Model_Config_Element) {
+                    $classAlias = (string)$classAlias;
+                }
+                $this->_indexerTypes[$name] = Mage::getSingleton($classAlias);
+            }
+        }
+        return $this->_indexerTypes;
+    }
+
+    /**
+     * @param $name name of the indexer
+     */
+    protected function getIndexerTypeInstance($name)
+    {
+
+    }
+
+    /**
      * get current index name
      *
      * @return string
@@ -200,8 +232,30 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
     {
         if (false === $this->getClient()->indexCreate($this->getIndexAlias())) {
             Mage::throwException(sprintf('Unable to create index "%s".', $this->getIndexAlias()));
-
         }
+        // apply new mapping
+        return $this;
+    }
+
+    /**
+     * refresh index
+     *
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
+     */
+    protected function refreshIndex()
+    {
+        #$this->getClient()->indexRefresh($this->getIndexName());
+        return $this;
+    }
+
+    /**
+     * rotate index to new alias
+     *
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
+     */
+    protected function rotateIndex()
+    {
+        #$this->getClient()->indexRotate($this->getIndexName(), $this->getIndexAlias());
         return $this;
     }
 
@@ -225,7 +279,6 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
      *
      * @param int|string|Mage_Core_Model_Store
      * @return SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
-     * @todo finally refactor it to split it to different methods
      */
     public function rebuild($store = null)
     {
@@ -234,23 +287,21 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
         //set flag current process is full reindexing
         $this->isFullReindex(true);
         Mage::dispatchEvent('elasticommerce_rebuild_store_before', array('indexer' => $this, 'store' => $this->getStore()));
+
         //create new index
-        #$this->createIndex();
-        // apply new index mapping
-        foreach (Mage::getConfig()->getNode('elasticommerce/indexer_types')->children() as $modelName) {
-            /** @var SmartDevs_ElastiCommerce_Model_Indexer_Type_Interface $model */
-            $this->getTypeIndexer($modelName)->getMapping();
-        }
-        #$this->getClient()->indexMappingUpdate($this->getIndexName());
+        $this->createIndex();
+
         //reindex data for indexer_types
         foreach (Mage::getConfig()->getNode('elasticommerce/indexer_types')->children() as $modelName) {
             /** @var SmartDevs_ElastiCommerce_Model_Indexer_Type_Interface $model */
-            $this->getTypeIndexer($modelName)->rebuild();
+            #$this->getTypeIndexer($modelName)->rebuild();
         }
-        //refresh index
-        #$this->getClient()->indexRefresh($this->getIndexName());
-        // rotate index alias to new index
-        #$this->getClient()->indexRotate($this->getIndexName(), $this->getIndexAlias());
+
+        // refresh index
+        $this->refreshIndex();
+        // rotate index alias
+        $this->rotateIndex();
+
         Mage::dispatchEvent('elasticommerce_rebuild_store_after', array('indexer' => $this, 'store' => $this->getStore()));
         //reset flag current process is full reindexing
         $this->isFullReindex(false);

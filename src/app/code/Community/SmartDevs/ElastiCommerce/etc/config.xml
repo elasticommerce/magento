@@ -59,13 +59,13 @@
             </updates>
         </layout>
     </adminhtml>
-    <elasticgento>
+    <elasticommerce>
         <indexer_types>
             <product>elasticommerce/indexer_type_product</product>
             <category>elasticommerce/indexer_type_category</category>
-            <cms_page>elasticommerce/indexer_type_cmspage</cms_page>
+            <cms_page>elasticommerce/indexer_type_cms_page</cms_page>
         </indexer_types>
-    </elasticgento>
+    </elasticommerce>
     <default>
     </default>
 </config>
