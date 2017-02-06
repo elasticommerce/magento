@@ -11,4 +11,21 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Category
     implements SmartDevs_ElastiCommerce_Model_Indexer_Type_Interface
 {
     protected static $indexerType = 'category';
+
+    /**
+     * magento entity
+     *
+     * @var string
+     */
+    protected static $entity = Mage_Catalog_Model_Category::ENTITY;
+
+    /**
+     * get current entity type code
+     *
+     * @return string
+     */
+    protected function getEntityTypeCode()
+    {
+        return self::$entity;
+    }
 }

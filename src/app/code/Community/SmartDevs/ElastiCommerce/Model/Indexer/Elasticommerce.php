@@ -14,13 +14,6 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
     protected $_isFullReindex = false;
 
     /**
-     * all indexer type instances
-     *
-     * @var SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract[]
-     */
-    private $_indexerTypes = null;
-
-    /**
      * current store object
      *
      * @var Mage_Core_Model_Store
@@ -49,13 +42,6 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
     protected $_websiteId = null;
 
     /**
-     * entity indexer model
-     *
-     * @var Infinitescale_Elasticgento_Model_Indexer_Entity_Abstract[]
-     */
-    protected $_entityIndexerModel = array();
-
-    /**
      * current index name
      *
      * @var string
@@ -68,6 +54,13 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
      * @var string
      */
     protected $_indexAlias = null;
+
+    /**
+     * all indexer type instances
+     *
+     * @var SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract[]
+     */
+    private $_indexerTypes = null;
 
     /**
      * get current process is full reindex
@@ -111,23 +104,6 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
     }
 
     /**
-     * @param $className model name
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
-     */
-    protected function getTypeIndexer($className)
-    {
-        //if $classname is a confg node force it to be string
-        if ($className instanceof Mage_Core_Model_Config_Element) {
-            $className = (string)$className;
-        }
-        //get instance and add it to array cache
-        if (false === isset($this->_entityIndexerModel[$className]) || null === $this->_entityIndexerModel[$className]) {
-            $this->_entityIndexerModel[$className] = Mage::getModel((string)$className, array('indexer' => $this));
-        }
-        return $this->_entityIndexerModel[$className];
-    }
-
-    /**
      * get current store scope
      *
      * @return Mage_Core_Model_Store
@@ -167,6 +143,24 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
         return $this->_websiteId;
     }
 
+
+    /**
+     * @param $className model name
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
+     */
+    protected function getTypeIndexer($className)
+    {
+        //if $classname is a confg node force it to be string
+        if ($className instanceof Mage_Core_Model_Config_Element) {
+            $className = (string)$className;
+        }
+        //get instance and add it to array cache
+        if (false === isset($this->_entityIndexerModel[$className]) || null === $this->_entityIndexerModel[$className]) {
+            $this->_entityIndexerModel[$className] = Mage::getModel((string)$className, array('indexer' => $this));
+        }
+        return $this->_entityIndexerModel[$className];
+    }
+
     /**
      * get all indexer types
      */
@@ -181,15 +175,25 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
                 $this->_indexerTypes[$name] = Mage::getSingleton($classAlias);
             }
         }
-        return $this->_indexerTypes;
+        return array_keys($this->_indexerTypes);
     }
 
     /**
-     * @param $name name of the indexer
+     * get indexer instance
+     *
+     * @param $name     name of the indexer
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
+     * @throws Mage_Core_Exception
      */
     protected function getIndexerTypeInstance($name)
     {
-
+        if (false === in_array($name, $this->getIndexerTypes())) {
+            Mage::throwException(sprintf('invalid indexer type "%s"', $name));
+        }
+        if (false === $this->_indexerTypes[$name] instanceOf SmartDevs_ElastiCommerce_Model_Indexer_Type_Interface) {
+            Mage::throwException(sprintf('Indexer "%s" should use interface "%s"', $name, 'SmartDevs_ElastiCommerce_Model_Indexer_Type_Interface'));
+        }
+        return $this->_indexerTypes[$name];
     }
 
     /**
@@ -230,9 +234,9 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
      */
     protected function createIndex()
     {
-        if (false === $this->getClient()->indexCreate($this->getIndexAlias())) {
-            Mage::throwException(sprintf('Unable to create index "%s".', $this->getIndexAlias()));
-        }
+        #if (false === $this->getClient()->indexCreate($this->getIndexAlias())) {
+        #    Mage::throwException(sprintf('Unable to create index "%s".', $this->getIndexAlias()));
+        #}
         // apply new mapping
         return $this;
     }
@@ -287,21 +291,16 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
         //set flag current process is full reindexing
         $this->isFullReindex(true);
         Mage::dispatchEvent('elasticommerce_rebuild_store_before', array('indexer' => $this, 'store' => $this->getStore()));
-
         //create new index
         $this->createIndex();
-
         //reindex data for indexer_types
-        foreach (Mage::getConfig()->getNode('elasticommerce/indexer_types')->children() as $modelName) {
-            /** @var SmartDevs_ElastiCommerce_Model_Indexer_Type_Interface $model */
-            #$this->getTypeIndexer($modelName)->rebuild();
+        foreach ($this->getIndexerTypes() as $type) {
+            $this->getIndexerTypeInstance($type)->reindex($this->getStore());
         }
-
         // refresh index
         $this->refreshIndex();
         // rotate index alias
         $this->rotateIndex();
-
         Mage::dispatchEvent('elasticommerce_rebuild_store_after', array('indexer' => $this, 'store' => $this->getStore()));
         //reset flag current process is full reindexing
         $this->isFullReindex(false);

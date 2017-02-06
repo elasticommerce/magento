@@ -55,7 +55,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer extends Mage_Index_Model_Indexer_Ab
     /**
      * Rebuild complete store index data
      *
-     * @return SmartDevs_ElastiCommerce_Model_Indexer
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
      */
     public function reindexAll()
     {
