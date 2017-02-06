@@ -295,7 +295,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
         $this->createIndex();
         //reindex data for indexer_types
         foreach ($this->getIndexerTypes() as $type) {
-            $this->getIndexerTypeInstance($type)->reindex($this->getStore());
+            $this->getIndexerTypeInstance($type)->reindexStore($this->getStore());
         }
         // refresh index
         $this->refreshIndex();
