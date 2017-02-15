@@ -1,4 +1,5 @@
 <?php
+use \SmartDevs\ElastiCommerce\Manager;
 
 /**
  * Created by PhpStorm.
@@ -6,8 +7,116 @@
  * Date: 05.02.17
  * Time: 21:25
  */
-abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
+abstract class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
 {
+
+    /**
+     * current store id
+     *
+     * @var integer
+     */
+    protected $storeId = null;
+
+    /**
+     * current website id
+     *
+     * @var int
+     */
+    protected $websiteId = null;
+
+    /**
+     * current store group id
+     *
+     * @var integer
+     */
+    protected $storeGroupId = null;
+
+    /**
+     * @var SmartDevs\ElastiCommerce\Manager
+     */
+    protected $adapter = null;
+
+    /**
+     * @return \SmartDevs\ElastiCommerce\Manager
+     */
+    public function getAdapter(): Manager
+    {
+        return $this->adapter;
+    }
+
+    /**
+     * get store id
+     *
+     * @return int
+     */
+    public function getStoreId(): int
+    {
+        return $this->storeId;
+    }
+
+    /**
+     * @param int $storeId
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
+     */
+    public function setStoreId(int $storeId)
+    {
+        $this->storeId = $storeId;
+        return $this;
+    }
+
+    /**
+     * get website id
+     *
+     * @return int
+     */
+    public function getWebsiteId(): int
+    {
+        return $this->websiteId;
+    }
+
+    /**
+     * set store group id
+     *
+     * @param int $websiteId
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
+     */
+    public function setStoreGroupId(int $storeGroupId)
+    {
+        $this->storeGroupId = $storeGroupId;
+        return $this;
+    }
+
+    /**
+     * get website id
+     *
+     * @return int
+     */
+    public function getStoreGroupId(): int
+    {
+        return $this->storeGroupId;
+    }
+
+    /**
+     * set website id
+     *
+     * @param int $websiteId
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
+     */
+    public function setWebsiteId(int $websiteId)
+    {
+        $this->websiteId = $websiteId;
+        return $this;
+    }
+
+    /**
+     * @param \SmartDevs\ElastiCommerce\Manager $adapter
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
+     */
+    public function setAdapter(Manager $adapter): SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
+    {
+        $this->adapter = $adapter;
+        return $this;
+    }
 
     /**
      * get indexer type

@@ -6,9 +6,34 @@
  * Date: 05.02.17
  * Time: 21:25
  */
-abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract_Eav
-    extends SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
+abstract class SmartDevs_ElastiCommerce_Model_Indexer_Magento_AbstractEav
+    extends SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
 {
+
+
+    /**
+     * entity type model
+     *
+     * @var Mage_Eav_Model_Entity_Type
+     */
+    protected $entity = null;
+
+    /**
+     * @var Mage_Eav_Model_Entity_Attribute[]
+     */
+    protected $entityAttributes = null;
+
+    /**
+     * @var Mage_Eav_Model_Entity_Attribute[]
+     */
+    protected $entityAttributeMap = null;
+
+    /**
+     * get current entity type code
+     *
+     * @return string
+     */
+    abstract protected function getEntityTypeCode();
 
     /**
      * get entity type
@@ -17,10 +42,10 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract_Eav
      */
     protected function getEntity()
     {
-        if (null === $this->_entity) {
-            $this->_entity = Mage::getSingleton('eav/config')->getEntityType($this->getEntityTypeCode());
+        if (null === $this->entity) {
+            $this->entity = Mage::getSingleton('eav/config')->getEntityType($this->getEntityTypeCode());
         }
-        return $this->_entity;
+        return $this->entity;
     }
 
     /**
@@ -30,7 +55,7 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract_Eav
      */
     public function getEntityAttributes()
     {
-        if (null === $this->_entityAttributes) {
+        if (null === $this->entityAttributes) {
             //preload attribute codes
             $attributeCodes = Mage::getSingleton('eav/config')->getEntityAttributeCodes($this->getEntity());
             foreach ($attributeCodes as $attributeCode) {
@@ -40,10 +65,10 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract_Eav
                 // To prevent exception when some module was disabled
                 $attribute->usesSource() && $attribute->getSource();
                 $attribute->getBackend();
-                $this->_entityAttributes[$attribute->getId()] = $attribute;
-                $this->_entityAttributeLookup[$attributeCode] = $attribute->getId();
+                $this->entityAttributes[$attribute->getId()] = $attribute;
+                $this->entityAttributeMap[$attributeCode] = $attribute->getId();
             }
         }
-        return $this->_entityAttributes;
+        return $this->entityAttributes;
     }
 }

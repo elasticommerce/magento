@@ -36,7 +36,7 @@
                     <model>elasticommerce/rewrite_fulltext</model>
                 </catalogsearch_fulltext>
                 <elasticommerce>
-                    <model>elasticommerce/indexer</model>
+                    <model>elasticommerce/indexer_magento</model>
                 </elasticommerce>
             </indexer>
         </index>
@@ -61,9 +61,9 @@
     </adminhtml>
     <elasticommerce>
         <indexer_types>
-            <product>elasticommerce/indexer_type_product</product>
-            <category>elasticommerce/indexer_type_category</category>
-            <cms_page>elasticommerce/indexer_type_cms_page</cms_page>
+            <product>elasticommerce/indexer_magento_product</product>
+            <category>elasticommerce/indexer_magento_category</category>
+            <cms_page>elasticommerce/indexer_magento_CmsPage</cms_page>
         </indexer_types>
     </elasticommerce>
     <default>

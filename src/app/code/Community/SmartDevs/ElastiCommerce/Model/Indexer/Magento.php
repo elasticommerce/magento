@@ -6,7 +6,7 @@
  * @category  ElastiCommerce
  * @package   ElastiCommerce_Magento
  */
-class SmartDevs_ElastiCommerce_Model_Indexer extends Mage_Index_Model_Indexer_Abstract
+class SmartDevs_ElastiCommerce_Model_Indexer_Magento extends Mage_Index_Model_Indexer_Abstract
 {
     /**
      * entities and action which match indexer
@@ -23,24 +23,32 @@ class SmartDevs_ElastiCommerce_Model_Indexer extends Mage_Index_Model_Indexer_Ab
     /**
      * Retrieve Catalog Indexer model
      *
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade
      */
-    protected function _getIndexer()
+    protected function getIndexerFacade()
     {
-        return Mage::getSingleton('elasticommerce/indexer_elasticommerce');
+        return Mage::getSingleton('elasticommerce/indexer_magento_facade');
     }
 
     /**
      * Process event
      *
+     * @SuppressWarnings("PHPMD.CamelCaseMethodName")
      * @param Mage_Index_Model_Event $event
-     * @return SmartDevs_ElastiCommerce_Model_Indexer
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento
      */
     protected function _processEvent(Mage_Index_Model_Event $event)
     {
         return $this;
     }
 
+    /**
+     * register event
+     *
+     * @SuppressWarnings("PHPMD.CamelCaseMethodName")
+     * @param Mage_Index_Model_Event $event
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento
+     */
     protected function _registerEvent(Mage_Index_Model_Event $event)
     {
         switch ($event->getEntity()) {
@@ -55,17 +63,16 @@ class SmartDevs_ElastiCommerce_Model_Indexer extends Mage_Index_Model_Indexer_Ab
     /**
      * Rebuild complete store index data
      *
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Elasticommerce
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade
      */
     public function reindexAll()
     {
-        return $this->_getIndexer()->reindexAll();
+        return $this->getIndexerFacade()->reindexAll();
     }
 
     /**
      * Whether the indexer should be displayed on process/list page
      *
-     * @todo backend flag
      * @return bool
      */
     public function isVisible()

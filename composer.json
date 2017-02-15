@@ -5,7 +5,8 @@
   "version": "1.0.0",
   "description": "SmartDevs ElastiCommerce Module for Magento 1",
   "require": {
-    "elasticsearch/elasticsearch": "~5.0"
+    "smart-devs/elasticommerce-base": "~1.0",
+    "psr/log": "~1.0"
   },
   "suggest": {
     "magento-hackathon/magento-composer-installer": "Magento module installer"
