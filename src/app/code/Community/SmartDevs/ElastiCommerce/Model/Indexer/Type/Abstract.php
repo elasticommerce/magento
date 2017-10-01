@@ -1,5 +1,4 @@
 <?php
-use \SmartDevs\ElastiCommerce\Manager;
 
 /**
  * Created by PhpStorm.
@@ -7,8 +6,22 @@ use \SmartDevs\ElastiCommerce\Manager;
  * Date: 05.02.17
  * Time: 21:25
  */
-abstract class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
+abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
 {
+    /**
+     * sprintf schema for document id
+     */
+    const DOCUMENT_ID_SCHEMA = '%s_%u';
+
+    /**
+     * @var SmartDevs_ElastiCommerce_Indexer
+     */
+    protected $indexer = null;
+
+    /**
+     * @var Mage_Core_Model_Store
+     */
+    protected $store = null;
 
     /**
      * current store id
@@ -32,16 +45,16 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
     protected $storeGroupId = null;
 
     /**
-     * @var SmartDevs\ElastiCommerce\Manager
+     * set current store scope
+     *
+     * @param Mage_Core_Model_Store $store
      */
-    protected $adapter = null;
-
-    /**
-     * @return \SmartDevs\ElastiCommerce\Manager
-     */
-    public function getAdapter(): Manager
+    public function setStore(Mage_Core_Model_Store $store)
     {
-        return $this->adapter;
+        $this->store = $store;
+        $this->storeId = $store->getId();
+        $this->websiteId = $store->getWebsiteId();
+        $this->storeGroupId = $store->getGroupId();
     }
 
     /**
@@ -56,7 +69,7 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
 
     /**
      * @param int $storeId
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
      */
     public function setStoreId(int $storeId)
     {
@@ -78,7 +91,7 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
      * set store group id
      *
      * @param int $websiteId
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
      */
     public function setStoreGroupId(int $storeGroupId)
     {
@@ -100,7 +113,7 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
      * set website id
      *
      * @param int $websiteId
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
      */
     public function setWebsiteId(int $websiteId)
     {
@@ -109,13 +122,29 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
     }
 
     /**
-     * @param \SmartDevs\ElastiCommerce\Manager $adapter
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
+     * @param SmartDevs_ElastiCommerce_Indexer $indexer
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
      */
-    public function setAdapter(Manager $adapter): SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
+    public function setIndexerClient(SmartDevs_ElastiCommerce_Indexer $indexer): SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
     {
-        $this->adapter = $adapter;
+        $this->indexer = $indexer;
         return $this;
+    }
+
+    /**
+     * @return \SmartDevs\ElastiCommerce\Index\Indexer
+     */
+    public function getIndexerClient(): SmartDevs_ElastiCommerce_Indexer
+    {
+        return $this->indexer;
+    }
+
+    /**
+     * @return \SmartDevs\ElastiCommerce\Index\BulkCollection
+     */
+    public function getBulkCollection(): \SmartDevs\ElastiCommerce\Index\BulkCollection
+    {
+        return $this->getIndexerClient()->getBulk();
     }
 
     /**
@@ -125,7 +154,7 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
      */
     public function getIndexerType()
     {
-        return self::$indexerType;
+        return static::$indexerType;
     }
 
     /**
@@ -176,6 +205,39 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
     }
 
     /**
+     * get document id for given id
+     *
+     * @param $id
+     * @return string
+     */
+    protected function getDocumentId($id)
+    {
+        return sprintf(self::DOCUMENT_ID_SCHEMA, $this->getIndexerType(), $id);
+    }
+
+    /**
+     * create a new document
+     *
+     * @param int $id
+     * @return SmartDevs_ElastiCommerce_IndexDocument
+     */
+    protected function createNewDocument(int $id, string $action = 'create')
+    {
+        return new SmartDevs_ElastiCommerce_IndexDocument($this->getDocumentId($id), $action);
+    }
+
+    /**
+     * get docu
+     *
+     * @param string $docId
+     * @return SmartDevs_ElastiCommerce_IndexDocument
+     */
+    public function getDocument(string $docId): SmartDevs_ElastiCommerce_IndexDocument
+    {
+        return $this->getBulkCollection()->getItemById($docId);
+    }
+
+    /**
      * @return array
      */
     public function getTypeMapping()
@@ -189,7 +251,7 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
      * @param Mage_Core_Model_Store store to reindex
      * @return $this
      */
-    public function reindexStore(Mage_Core_Model_Store $store)
+    public function reindexStore()
     {
         return $this;
     }
@@ -202,7 +264,7 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
      *
      * @return $this
      */
-    public function reindexEntity(array $entityIds, Mage_Core_Model_Store $store)
+    public function reindexEntity(array $entityIds): SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
     {
         return $this;
     }
@@ -215,7 +277,7 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
      *
      * @return $this
      */
-    public function reindexAttributes(array $attributeCodes, Mage_Core_Model_Store $store)
+    public function reindexAttributes(array $attributeCodes): SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
     {
         return $this;
     }
@@ -229,7 +291,7 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Abstract
      *
      * @return $this
      */
-    public function reindexEntityAttributes(array $entityIds, array $attributeCodes, Mage_Core_Model_Store $store)
+    public function reindexEntityAttributes(array $entityIds, array $attributeCodes): SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
     {
         return $this;
     }

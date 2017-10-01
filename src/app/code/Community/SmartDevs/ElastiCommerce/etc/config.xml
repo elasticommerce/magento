@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 /**
- * elasticommerce module declarations
+ * elasticommerce module configuration
  */
 -->
 <config>
@@ -36,7 +36,7 @@
                     <model>elasticommerce/rewrite_fulltext</model>
                 </catalogsearch_fulltext>
                 <elasticommerce>
-                    <model>elasticommerce/indexer_magento</model>
+                    <model>elasticommerce/indexer_handler</model>
                 </elasticommerce>
             </indexer>
         </index>
@@ -61,11 +61,26 @@
     </adminhtml>
     <elasticommerce>
         <indexer_types>
-            <product>elasticommerce/indexer_magento_product</product>
-            <category>elasticommerce/indexer_magento_category</category>
-            <cms_page>elasticommerce/indexer_magento_CmsPage</cms_page>
+            <product>elasticommerce/indexer_type_product</product>
+            <category>elasticommerce/indexer_type_category</category>
+            <cms_page>elasticommerce/indexer_type_CmsPage</cms_page>
         </indexer_types>
     </elasticommerce>
     <default>
+        <elasticommerce>
+            <connection>
+                <host><![CDATA[127.0.0.1]]></host>
+                <port><![CDATA[9200]]></port>
+                <auth_username/>
+                <auth_password/>
+            </connection>
+            <index>
+                <number_of_shards>5</number_of_shards>
+                <number_of_replicas>1</number_of_replicas>
+                <prefix>elasticommerce</prefix>
+                <analyzer_config_file>analyzer.xml</analyzer_config_file>
+                <schema_config_file>schema.xml</schema_config_file>
+            </index>
+        </elasticommerce>
     </default>
 </config>

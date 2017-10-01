@@ -6,9 +6,9 @@
  * Date: 05.02.17
  * Time: 21:41
  */
-class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Category
-    extends SmartDevs_ElastiCommerce_Model_Indexer_Magento_AbstractEav
-    implements SmartDevs_ElastiCommerce_Model_Indexer_Magento_Interface
+class SmartDevs_ElastiCommerce_Model_Indexer_Type_Category
+    extends SmartDevs_ElastiCommerce_Model_Indexer_Type_AbstractEav
+    implements SmartDevs_ElastiCommerce_Model_Indexer_Type_Interface
 {
     protected static $indexerType = 'category';
 
@@ -50,11 +50,8 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Category
      * @param Mage_Core_Model_Store $store
      * @return $this
      */
-    public function reindexStore(Mage_Core_Model_Store $store)
+    public function reindexStore()
     {
-        $this->setStoreId($store->getId());
-        $this->setWebsiteId($store->getWebsiteId());
-        $this->setStoreGroupId($store->getGroupId());
         foreach ($this->getCategoryChunks() as $chunk) {
             Mage::helper('elasticommerce/log')->log(Zend_Log::INFO,
                 sprintf('Reindexing category chunk %u - %u',

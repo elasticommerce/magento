@@ -6,7 +6,7 @@
  * @category  ElastiCommerce
  * @package   ElastiCommerce_Magento
  */
-class SmartDevs_ElastiCommerce_Model_Indexer_Magento extends Mage_Index_Model_Indexer_Abstract
+class SmartDevs_ElastiCommerce_Model_Indexer_Handler extends Mage_Index_Model_Indexer_Abstract
 {
     /**
      * entities and action which match indexer
@@ -23,11 +23,11 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Magento extends Mage_Index_Model_In
     /**
      * Retrieve Catalog Indexer model
      *
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Facade
      */
     protected function getIndexerFacade()
     {
-        return Mage::getSingleton('elasticommerce/indexer_magento_facade');
+        return Mage::getSingleton('elasticommerce/indexer_facade');
     }
 
     /**

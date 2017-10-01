@@ -4,7 +4,7 @@
  * elasticommerce magento indexer facade
  *
  */
-class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade
+class SmartDevs_ElastiCommerce_Model_Indexer_Facade
 {
 
     const TYPE_INDEX_XML_PATH = 'elasticommerce/indexer_types';
@@ -14,7 +14,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade
      *
      * @var bool
      */
-    protected $_isFullReindex = false;
+    protected $isFullReindex = false;
 
     /**
      * current store object
@@ -28,15 +28,20 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade
      *
      * @var string[]
      */
-    protected $indexerTypes = null;
+    protected $mageIndexerTypes = null;
 
     /**
-     * @var SmartDevs_ElastiCommerce_Model_Indexer_Magento_Interface[]
+     * @var SmartDevs_ElastiCommerce_Model_Indexer_Type_Interface[]
      */
     protected $indexerTypeInstances = null;
 
     /**
-     * SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade constructor.
+     * @var SmartDevs_ElastiCommerce_Indexer[]
+     */
+    protected $indexerClient = [];
+
+    /**
+     * SmartDevs_ElastiCommerce_Model_Indexer_Facade constructor.
      */
     public function __construct()
     {
@@ -49,7 +54,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade
     protected function initIndexerTypes()
     {
         foreach (Mage::getConfig()->getNode(self::TYPE_INDEX_XML_PATH)->children() as $name => $classAlias) {
-            //if $classname is a confg node force it to be string
+            //if $classname is a config node force it to be string
             if ($classAlias instanceof Mage_Core_Model_Config_Element) {
                 $classAlias = (string)$classAlias;
             }
@@ -71,16 +76,16 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade
      * create an new indexer type instance by given code
      *
      * @param $type
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento_Interface
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Interface
      */
     protected function createIndexerTypeInstance($type)
     {
         if (false === array_key_exists($type, $this->indexerTypes)) {
             Mage::throwException(sprintf('invalid indexer type "%s"', $type));
         }
-        /** @var SmartDevs_ElastiCommerce_Model_Indexer_Magento_Interface $indexerTypeInstance */
+        /** @var SmartDevs_ElastiCommerce_Model_Indexer_Type_Interface $indexerTypeInstance */
         $indexerTypeInstance = Mage::getSingleton($this->indexerTypes[$type]);
-        if (false === $indexerTypeInstance instanceOf SmartDevs_ElastiCommerce_Model_Indexer_Magento_Interface) {
+        if (false === $indexerTypeInstance instanceOf SmartDevs_ElastiCommerce_Model_Indexer_Type_Interface) {
             Mage::throwException(sprintf('Indexer "%s" should use interface "%s"',
                 $type,
                 'SmartDevs_ElastiCommerce_Model_Indexer_Magento_Interface'));
@@ -92,36 +97,62 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade
      * get indexer type instance by code
      *
      * @param string $type
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento_Interface
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Interface
      */
     protected function getIndexerTypeInstance($type)
     {
         if (false === isset($this->indexerTypeInstances[$type])) {
             $this->indexerTypeInstances[$type] = $this->createIndexerTypeInstance($type);
         }
+        $this->indexerTypeInstances[$type]->setStore($this->getStore());
+        if (isset($this->indexerClient[(int)$this->getStoreId()])) {
+            $this->indexerTypeInstances[$type]->setIndexerClient(
+                $this->indexerClient[(int)$this->getStoreId()]
+            );
+        }
         return $this->indexerTypeInstances[$type];
+    }
+
+    /**
+     * @param $storeId
+     * @return SmartDevs_ElastiCommerce_Indexer
+     */
+    protected function getIndexerClient($storeId)
+    {
+        if (!isset($this->indexerClient[(int)$storeId])) {
+            $this->indexerClient[(int)$storeId] = Mage::helper('elasticommerce/factory')->createIndexer((int)$this->getStoreId());
+        }
+        return $this->indexerClient[(int)$storeId];
+    }
+
+    /**
+     * set current process is full reindex
+     *
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Facade
+     */
+    protected function setIsFullReindex($value)
+    {
+        if ($value === false || $value === true) {
+            $this->isFullReindex = (bool)$value;
+        }
+        return $this;
     }
 
     /**
      * get current process is full reindex
      *
-     * @param null|bool
      * @return bool
      */
-    protected function isFullReindex($value = null)
+    protected function isFullReindex()
     {
-        if ($value === false || $value === true) {
-            $this->_isFullReindex = $value;
-            return $this;
-        }
-        return $this->_isFullReindex;
+        return $this->isFullReindex;
     }
 
     /**
      * set current store scope
      *
      * @param int|string|Mage_Core_Model_Store $store
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Facade
      */
     public function setStore($store)
     {
@@ -167,32 +198,33 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade
         return $this->getStore()->getWebsiteId();
     }
 
-    /**
-     * create new index for storing data
-     *
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade
-     */
-    protected function createIndex()
+    protected function createMapping()
     {
-        //loop over all types to create new mapping
-        return $this;
+
     }
 
     /**
-     * refresh index
+     * create new index for storing data
      *
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Facade
      */
-    protected function refreshIndex()
+    protected function createIndex()
     {
-        #$this->getClient()->indexRefresh($this->getIndexName());
+        $this->indexerClient[$this->getStore()->getId()] = Mage::helper('elasticommerce/factory')->createIndexer((int)$this->getStoreId());
+        #$config = Mage::helper('elasticommerce/factory')->createConfig((int)$this->getStoreId());
+        #$indexer =
+        #$settings = $this->createIndexSettings();
+        #$mappings = $this->createIndexMappings();
+        #$indexer = Mage::helper('elasticommerce/factory')->getIndexer($this->getStoreId());
+        //loop over all types to create new mapping
+        #$indexer->getMappings()->getMapping();
         return $this;
     }
 
     /**
      * rotate index to new alias
      *
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Facade
      */
     protected function rotateIndex()
     {
@@ -203,7 +235,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade
     /**
      * Rebuild ElastiCommerce Index for all stores
      *
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Facade
      */
     public function reindexAll()
     {
@@ -219,20 +251,20 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade
      * Rebuild ElastiCommerce Index for specific store
      *
      * @param int|Mage_Core_Model_Store
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Facade
      */
     public function rebuild($store = null)
     {
         //set current store scope
         $this->setStore($store);
         //set flag current process is full reindexing
-        $this->isFullReindex(true);
+        $this->setIsFullReindex(true);
         Mage::dispatchEvent('elasticommerce_rebuild_store_before', array('indexer' => $this, 'store' => $this->getStore()));
         //create new index
-        //$this->createIndex();
+        $this->createIndex();
         //reindex data for indexer_types
         foreach ($this->getAllIndexerTypes() as $type) {
-            $this->getIndexerTypeInstance($type)->reindexStore($this->getStore());
+            $this->getIndexerTypeInstance($type)->reindexStore();
         }
         // refresh index
         //$this->getAdapter()->refreshIndex();
@@ -240,7 +272,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade
         //$this->rotateIndex();
         Mage::dispatchEvent('elasticommerce_rebuild_store_after', array('indexer' => $this, 'store' => $this->getStore()));
         //reset flag current process is full reindexing
-        $this->isFullReindex(false);
+        $this->setIsFullReindex(false);
         return $this;
     }
 }
