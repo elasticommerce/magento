@@ -75,7 +75,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Facade
     /**
      * create an new indexer type instance by given code
      *
-     * @param $type
+     * @param string $type
      * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Interface
      */
     protected function createIndexerTypeInstance($type)
@@ -104,25 +104,23 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Facade
         if (false === isset($this->indexerTypeInstances[$type])) {
             $this->indexerTypeInstances[$type] = $this->createIndexerTypeInstance($type);
         }
+        //set current store scope to type indexer
         $this->indexerTypeInstances[$type]->setStore($this->getStore());
-        if (isset($this->indexerClient[(int)$this->getStoreId()])) {
-            $this->indexerTypeInstances[$type]->setIndexerClient(
-                $this->indexerClient[(int)$this->getStoreId()]
-            );
-        }
+        $this->indexerTypeInstances[$type]->setIndexerClient($this->getIndexerClient());
         return $this->indexerTypeInstances[$type];
     }
 
     /**
-     * @param $storeId
+     * get indexer client instance
+     *
      * @return SmartDevs_ElastiCommerce_Indexer
      */
-    protected function getIndexerClient($storeId)
+    protected function getIndexerClient()
     {
-        if (!isset($this->indexerClient[(int)$storeId])) {
-            $this->indexerClient[(int)$storeId] = Mage::helper('elasticommerce/factory')->createIndexer((int)$this->getStoreId());
+        if (false === isset($this->indexerClient[$this->getStoreId()])) {
+            $this->indexerClient[$this->getStoreId()] = Mage::helper('elasticommerce/factory')->createIndexer($this->getStoreId());
         }
-        return $this->indexerClient[(int)$storeId];
+        return $this->indexerClient[$this->getStoreId()];
     }
 
     /**
@@ -198,11 +196,6 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Facade
         return $this->getStore()->getWebsiteId();
     }
 
-    protected function createMapping()
-    {
-
-    }
-
     /**
      * create new index for storing data
      *
@@ -210,14 +203,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Facade
      */
     protected function createIndex()
     {
-        $this->indexerClient[$this->getStore()->getId()] = Mage::helper('elasticommerce/factory')->createIndexer((int)$this->getStoreId());
-        #$config = Mage::helper('elasticommerce/factory')->createConfig((int)$this->getStoreId());
-        #$indexer =
-        #$settings = $this->createIndexSettings();
-        #$mappings = $this->createIndexMappings();
-        #$indexer = Mage::helper('elasticommerce/factory')->getIndexer($this->getStoreId());
-        //loop over all types to create new mapping
-        #$indexer->getMappings()->getMapping();
+        $mapping = $this->getIndexerClient();
         return $this;
     }
 
@@ -259,6 +245,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Facade
         $this->setStore($store);
         //set flag current process is full reindexing
         $this->setIsFullReindex(true);
+        $this->getIndexerClient()->setIsFullReindex(true);
         Mage::dispatchEvent('elasticommerce_rebuild_store_before', array('indexer' => $this, 'store' => $this->getStore()));
         //create new index
         $this->createIndex();
@@ -266,13 +253,12 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Facade
         foreach ($this->getAllIndexerTypes() as $type) {
             $this->getIndexerTypeInstance($type)->reindexStore();
         }
-        // refresh index
-        //$this->getAdapter()->refreshIndex();
         // rotate index alias
-        //$this->rotateIndex();
+        $this->rotateIndex();
         Mage::dispatchEvent('elasticommerce_rebuild_store_after', array('indexer' => $this, 'store' => $this->getStore()));
         //reset flag current process is full reindexing
         $this->setIsFullReindex(false);
+        $this->getIndexerClient()->setIsFullReindex(false);
         return $this;
     }
 }
