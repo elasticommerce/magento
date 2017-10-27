@@ -35,7 +35,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Handler extends Mage_Index_Model_In
      *
      * @SuppressWarnings("PHPMD.CamelCaseMethodName")
      * @param Mage_Index_Model_Event $event
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Handler
      */
     protected function _processEvent(Mage_Index_Model_Event $event)
     {
@@ -47,7 +47,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Handler extends Mage_Index_Model_In
      *
      * @SuppressWarnings("PHPMD.CamelCaseMethodName")
      * @param Mage_Index_Model_Event $event
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Handler
      */
     protected function _registerEvent(Mage_Index_Model_Event $event)
     {
@@ -63,7 +63,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Handler extends Mage_Index_Model_In
     /**
      * Rebuild complete store index data
      *
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Magento_Facade
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Facade
      */
     public function reindexAll()
     {
