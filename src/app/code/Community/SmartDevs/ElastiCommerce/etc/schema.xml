@@ -23,7 +23,7 @@
             </mapping>
         </sort-string>
         <sort-numeric>
-            <path_match>sort-number.*</path_match>
+            <path_match>sort-numeric.*</path_match>
             <mapping type="double">
                 <index>not_analyzed</index>
             </mapping>
@@ -77,12 +77,12 @@
                 <index>not_analyzed</index>
             </filter-value>
         </filter-string>
-        <filter-number type="nested">
+        <filter-numeric type="nested">
             <filter-name type="string">
                 <index>not_analyzed</index>
             </filter-name>
             <filter-value type="double"/>
-        </filter-number>
+        </filter-numeric>
         <completition type="string">
             <analyzer>completion_analyzer</analyzer>
             <store>true</store>
