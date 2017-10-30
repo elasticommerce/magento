@@ -210,7 +210,7 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
      * @param $id
      * @return string
      */
-    protected function getDocumentId($id)
+    public function getDocumentId($id)
     {
         return sprintf(self::DOCUMENT_ID_SCHEMA, $this->getIndexerType(), $id);
     }
@@ -223,7 +223,7 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
      */
     protected function createNewDocument(int $id, string $action = 'create')
     {
-        return new SmartDevs_ElastiCommerce_IndexDocument($this->getDocumentId($id), $action);
+        return new SmartDevs_ElastiCommerce_IndexDocument($this->getDocumentId($id), $this->getIndexerType(), $action);
     }
 
     /**
@@ -240,7 +240,7 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
     /**
      * @return array
      */
-    public function getTypeMapping()
+    public function getTypeMapping(): array
     {
         return array();
     }

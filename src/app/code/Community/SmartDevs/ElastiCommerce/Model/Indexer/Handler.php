@@ -58,6 +58,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Handler extends Mage_Index_Model_In
                 $process->changeStatus(Mage_Index_Model_Process::STATUS_REQUIRE_REINDEX);
                 break;
         }
+        return $this;
     }
 
     /**

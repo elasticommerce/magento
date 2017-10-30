@@ -124,29 +124,6 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Facade
     }
 
     /**
-     * set current process is full reindex
-     *
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Facade
-     */
-    protected function setIsFullReindex($value)
-    {
-        if ($value === false || $value === true) {
-            $this->isFullReindex = (bool)$value;
-        }
-        return $this;
-    }
-
-    /**
-     * get current process is full reindex
-     *
-     * @return bool
-     */
-    protected function isFullReindex()
-    {
-        return $this->isFullReindex;
-    }
-
-    /**
      * set current store scope
      *
      * @param int|string|Mage_Core_Model_Store $store
@@ -197,28 +174,6 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Facade
     }
 
     /**
-     * create new index for storing data
-     *
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Facade
-     */
-    protected function createIndex()
-    {
-        $mapping = $this->getIndexerClient();
-        return $this;
-    }
-
-    /**
-     * rotate index to new alias
-     *
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Facade
-     */
-    protected function rotateIndex()
-    {
-        #$this->getClient()->indexRotate($this->getIndexName(), $this->getIndexAlias());
-        return $this;
-    }
-
-    /**
      * Rebuild ElastiCommerce Index for all stores
      *
      * @return SmartDevs_ElastiCommerce_Model_Indexer_Facade
@@ -244,20 +199,18 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Facade
         //set current store scope
         $this->setStore($store);
         //set flag current process is full reindexing
-        $this->setIsFullReindex(true);
         $this->getIndexerClient()->setIsFullReindex(true);
         Mage::dispatchEvent('elasticommerce_rebuild_store_before', array('indexer' => $this, 'store' => $this->getStore()));
         //create new index
-        $this->createIndex();
+        $this->getIndexerClient()->createIndex();
         //reindex data for indexer_types
         foreach ($this->getAllIndexerTypes() as $type) {
             $this->getIndexerTypeInstance($type)->reindexStore();
         }
         // rotate index alias
-        $this->rotateIndex();
+        $this->getIndexerClient()->rotateIndex();
         Mage::dispatchEvent('elasticommerce_rebuild_store_after', array('indexer' => $this, 'store' => $this->getStore()));
         //reset flag current process is full reindexing
-        $this->setIsFullReindex(false);
         $this->getIndexerClient()->setIsFullReindex(false);
         return $this;
     }

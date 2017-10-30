@@ -81,18 +81,22 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             $this->getStoreId(),
             $chunk);
         foreach ($rawResultData as $id => $values) {
+            /** @var SmartDevs_ElastiCommerce_IndexDocument $document */
             $document = $this->getDocument($this->getDocumentId($id));
             $document->addResultData($values);
+            // system attributes need special handling
+            if (false === boolval($attribute->getIsUserDefinded())) {
+                continue;
+            }
+            //add attribute to sort
             if (true === boolval($attribute->getUsedForSortBy())) {
-                $document->addSortData(
-                    $attribute->getSortFieldType(),
-                    $attribute->getSortColumnField(),
-                    $values[$attribute->getSortColumnField()]
-                );
+                $document->addSort($attribute->getSortColumnField(), $values[$attribute->getSortColumnField()], $attribute->getSortFieldType());
             }
+            // add filterable attribute data
             if (true === boolval($attribute->getIsFilterable())) {
-                $foo = 's';
+                $document->addFilter($attribute->getSortColumnField(), $values[$attribute->getSortColumnField()], $attribute->getSortFieldType());
             }
+            // add facette data
         }
         return $this;
     }

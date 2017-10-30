@@ -69,7 +69,7 @@
     <default>
         <elasticommerce>
             <connection>
-                <host><![CDATA[127.0.0.1]]></host>
+                <host><![CDATA[elasticsearch]]></host>
                 <port><![CDATA[9200]]></port>
                 <auth_username/>
                 <auth_password/>

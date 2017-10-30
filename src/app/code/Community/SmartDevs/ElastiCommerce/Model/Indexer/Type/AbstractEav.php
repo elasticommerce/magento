@@ -81,6 +81,12 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_AbstractEav
         return $this->entityAttributes;
     }
 
+    /**
+     * get sort field type mapping for attribute
+     *
+     * @param Mage_Eav_Model_Entity_Attribute $attribute
+     * @return string
+     */
     protected function getAttributeSortFieldType(Mage_Eav_Model_Entity_Attribute $attribute)
     {
         $columns = $attribute->getFlatColumns();
@@ -93,14 +99,14 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_AbstractEav
             case strpos($sqltype, 'tinyint') === 0:
             case strpos($sqltype, 'int') === 0:
             case strpos($sqltype, 'decimal') === 0: {
-                return 'sort-numeric';
+                return SmartDevs_ElastiCommerce_IndexDocument::SORT_NUMBER;
             }
             case strpos($sqltype, 'datetime') === 0:
             case strpos($sqltype, 'timestamp') === 0: {
-                return 'sort-date';
+                return SmartDevs_ElastiCommerce_IndexDocument::SORT_DATE;
             }
             default: {
-                return 'sort-string';
+                return SmartDevs_ElastiCommerce_IndexDocument::SORT_STRING;
             }
         }
     }

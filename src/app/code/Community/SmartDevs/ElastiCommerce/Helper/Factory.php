@@ -81,7 +81,7 @@ class SmartDevs_ElastiCommerce_Helper_Factory
      * @param int $storeId
      * @return Indexer
      */
-    public function getIndexer(int $storeId): Indexer
+    public function getIndexer(int $storeId): SmartDevs_ElastiCommerce_Indexer
     {
         if (false === isset($this->indexer[$storeId])) {
             $this->indexer[$storeId] = $this->createIndexer($storeId);
@@ -95,7 +95,7 @@ class SmartDevs_ElastiCommerce_Helper_Factory
      * @param int $storeId
      * @return Indexer
      */
-    public function createIndexer(int $storeId): Indexer
+    public function createIndexer(int $storeId): SmartDevs_ElastiCommerce_Indexer
     {
         return new SmartDevs_ElastiCommerce_Indexer(
             $this->getConfig($storeId)
