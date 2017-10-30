@@ -6,7 +6,7 @@
  * @category  ElastiCommerce
  * @package   ElastiCommerce_Magento
  */
-class SmartDevs_ElastiCommerce_Model_Indexer_Handler extends Mage_Index_Model_Indexer_Abstract
+class SmartDevs_ElastiCommerce_Model_Indexer_Process extends Mage_Index_Model_Indexer_Abstract
 {
     /**
      * entities and action which match indexer
@@ -23,11 +23,11 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Handler extends Mage_Index_Model_In
     /**
      * Retrieve Catalog Indexer model
      *
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Facade
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Processor
      */
     protected function getIndexerFacade()
     {
-        return Mage::getSingleton('elasticommerce/indexer_facade');
+        return Mage::getSingleton('elasticommerce/indexer_processor');
     }
 
     /**
@@ -35,7 +35,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Handler extends Mage_Index_Model_In
      *
      * @SuppressWarnings("PHPMD.CamelCaseMethodName")
      * @param Mage_Index_Model_Event $event
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Handler
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Process
      */
     protected function _processEvent(Mage_Index_Model_Event $event)
     {
@@ -47,7 +47,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Handler extends Mage_Index_Model_In
      *
      * @SuppressWarnings("PHPMD.CamelCaseMethodName")
      * @param Mage_Index_Model_Event $event
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Handler
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Process
      */
     protected function _registerEvent(Mage_Index_Model_Event $event)
     {
@@ -64,7 +64,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Handler extends Mage_Index_Model_In
     /**
      * Rebuild complete store index data
      *
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Facade
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Processor
      */
     public function reindexAll()
     {

@@ -36,7 +36,7 @@
                     <model>elasticommerce/rewrite_fulltext</model>
                 </catalogsearch_fulltext>
                 <elasticommerce>
-                    <model>elasticommerce/indexer_handler</model>
+                    <model>elasticommerce/indexer_process</model>
                 </elasticommerce>
             </indexer>
         </index>

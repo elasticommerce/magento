@@ -4,7 +4,7 @@
  * elasticommerce magento indexer facade
  *
  */
-class SmartDevs_ElastiCommerce_Model_Indexer_Facade
+class SmartDevs_ElastiCommerce_Model_Indexer_Processor
 {
 
     const TYPE_INDEX_XML_PATH = 'elasticommerce/indexer_types';
@@ -41,7 +41,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Facade
     protected $indexerClient = [];
 
     /**
-     * SmartDevs_ElastiCommerce_Model_Indexer_Facade constructor.
+     * SmartDevs_ElastiCommerce_Model_Indexer_Processor constructor.
      */
     public function __construct()
     {
@@ -176,7 +176,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Facade
     /**
      * Rebuild ElastiCommerce Index for all stores
      *
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Facade
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Processor
      */
     public function reindexAll()
     {
@@ -192,7 +192,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Facade
      * Rebuild ElastiCommerce Index for specific store
      *
      * @param int|Mage_Core_Model_Store
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Facade
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Processor
      */
     public function rebuild($store = null)
     {
