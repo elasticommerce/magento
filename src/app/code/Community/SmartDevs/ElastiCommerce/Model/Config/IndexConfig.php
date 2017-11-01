@@ -77,5 +77,60 @@ final class SmartDevs_ElastiCommerce_Model_Config_IndexConfig extends IndexConfi
                 DS,
                 strval(Mage::getStoreConfig(self::XML_CONFIG_PATH_INDEX_ANALYZER_CONFIG_FILE, $storeId)))
         );
+        $this->initLocaleCode($storeId);
+        $this->initLanguageCode();
+        $this->initLanguage();
+    }
+
+    /**
+     * init current locale code
+     *
+     * @return SmartDevs_ElastiCommerce_Model_Index_Settings
+     */
+    protected function initLocaleCode($storeId)
+    {
+        $localeCode = (string)Mage::getStoreConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $storeId);
+        if (true === empty($localeCode)) {
+            $localeCode = false;
+        }
+        $this->setLocaleCode($localeCode);
+        return $this;
+    }
+
+    /**
+     * init current language code
+     *
+     * @return SmartDevs_ElastiCommerce_Model_Index_Settings
+     */
+    protected function initLanguageCode()
+    {
+        //check we have an valid locale code
+        if (false === $this->getLocaleCode()) {
+            return $this->setLanguageCode(false);
+        }
+        //first set to unknown
+        $languageCode = false;
+        foreach ($this->supportedLanguageCodes as $code => $locales) {
+            if (true === is_array($locales)) {
+                if (true === in_array($this->getLocaleCode(), $locales)) {
+                    $languageCode = $code;
+                }
+            } elseif ($this->getLocaleCode() == $locales) {
+                $languageCode = $code;
+            }
+        }
+        $this->setLanguageCode($languageCode);
+        return $this;
+    }
+
+    /**
+     * init current language name
+     *
+     * @return SmartDevs_ElastiCommerce_Model_Index_Settings
+     */
+    protected function initLanguage()
+    {
+        $this->setLanguage(Zend_Locale_Data::getContent('en_GB', 'language', $this->getLanguageCode()));
+        return $this;
     }
 }

@@ -118,7 +118,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Processor
     protected function getIndexerClient()
     {
         if (false === isset($this->indexerClient[$this->getStoreId()])) {
-            $this->indexerClient[$this->getStoreId()] = Mage::helper('elasticommerce/factory')->createIndexer($this->getStoreId());
+            $this->indexerClient[$this->getStoreId()] = Mage::helper('elasticommerce/factory')->getIndexer($this->getStoreId());
         }
         return $this->indexerClient[$this->getStoreId()];
     }
@@ -174,6 +174,20 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Processor
     }
 
     /**
+     * register document Types
+     *
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Processor
+     */
+    protected function registerDocumentTypes()
+    {
+        foreach ($this->getAllIndexerTypes() as $type) {
+            /** @var $indexerType SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract */
+            $this->getIndexerClient()->registerDocumentType($this->getIndexerTypeInstance($type)->getDocumentType());
+        }
+        return $this;
+    }
+
+    /**
      * Rebuild ElastiCommerce Index for all stores
      *
      * @return SmartDevs_ElastiCommerce_Model_Indexer_Processor
@@ -201,6 +215,8 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Processor
         //set flag current process is full reindexing
         $this->getIndexerClient()->setIsFullReindex(true);
         Mage::dispatchEvent('elasticommerce_rebuild_store_before', array('indexer' => $this, 'store' => $this->getStore()));
+        //register document types and mapping at indexer
+        $this->registerDocumentTypes();
         //create new index
         $this->getIndexerClient()->createIndex();
         //reindex data for indexer_types

@@ -1,7 +1,6 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
-use SmartDevs\ElastiCommerce\Implementor\Config;
 use SmartDevs\ElastiCommerce\Config\{
     IndexConfig, ServerConfig
 };
@@ -14,12 +13,7 @@ class SmartDevs_ElastiCommerce_Helper_Factory
 {
 
     /**
-     * @var Config[]
-     */
-    protected $configs = [];
-
-    /**
-     * @var Indexer[]
+     * @var SmartDevs_ElastiCommerce_Indexer[]
      */
     protected $indexer = [];
 
@@ -38,7 +32,7 @@ class SmartDevs_ElastiCommerce_Helper_Factory
      * get new instance of ServerConfig
      *
      * @param int $storeId
-     * @return ServerConfig
+     * @return IndexConfig
      */
     protected function createIndexConfig(int $storeId): IndexConfig
     {
@@ -48,57 +42,30 @@ class SmartDevs_ElastiCommerce_Helper_Factory
     }
 
     /**
-     * create new config instance
+     * create new indexer Instance
      *
      * @param int $storeId
-     * @return Config
+     * @return SmartDevs_ElastiCommerce_Indexer
      */
-    public function createConfig(int $storeId): Config
+    protected function createIndexerInstance(int $storeId): SmartDevs_ElastiCommerce_Indexer
     {
-        $config = new SmartDevs_ElastiCommerce_Model_Config_Store();
-        $config->setServerConfig($this->createServerConfig($storeId));
-        $config->setIndexConfig($this->createIndexConfig($storeId));
-        return $config;
-    }
-
-    /**
-     * get config instance
-     *
-     * @param int $storeId
-     * @return Config
-     */
-    public function getConfig(int $storeId): Config
-    {
-        if (false === isset($this->configs[$storeId])) {
-            $this->configs[$storeId] = $this->createConfig($storeId);
-        }
-        return $this->configs[$storeId];
+        return new SmartDevs_ElastiCommerce_Indexer(
+            $this->createServerConfig($storeId),
+            $this->createIndexConfig($storeId)
+        );
     }
 
     /**
      * get an indexer instance
      *
      * @param int $storeId
-     * @return Indexer
+     * @return SmartDevs_ElastiCommerce_Indexer
      */
     public function getIndexer(int $storeId): SmartDevs_ElastiCommerce_Indexer
     {
         if (false === isset($this->indexer[$storeId])) {
-            $this->indexer[$storeId] = $this->createIndexer($storeId);
+            $this->indexer[$storeId] = $this->createIndexerInstance($storeId);
         }
         return $this->indexer[$storeId];
-    }
-
-    /**
-     * create new indexer Instance
-     *
-     * @param int $storeId
-     * @return Indexer
-     */
-    public function createIndexer(int $storeId): SmartDevs_ElastiCommerce_Indexer
-    {
-        return new SmartDevs_ElastiCommerce_Indexer(
-            $this->getConfig($storeId)
-        );
     }
 }
