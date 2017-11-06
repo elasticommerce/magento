@@ -165,7 +165,7 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
      * @param int $chunksize
      * @return array
      */
-    protected function getChunksByRange($offsetStart, $offsetEnd, $chunksize = 1000)
+    protected function getChunksByRange($offsetStart, $offsetEnd, $chunksize = 2500)
     {
         $total = $offsetEnd - $offsetStart;
         $chunksCount = ceil($total / $chunksize);

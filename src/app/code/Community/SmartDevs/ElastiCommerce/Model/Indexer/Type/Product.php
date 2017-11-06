@@ -46,7 +46,9 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
     protected function getProductChunks()
     {
         $range = $this->getResourceModel()->getProductRange($this->getWebsiteId());
-        return $this->getChunksByRange((int)$range['start'], (int)$range['end'], 1500);
+        $chunks = $this->getChunksByRange((int)$range['start'], (int)$range['end'], 1500);
+        Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Reindexing %u chunks', count($chunks)));
+        return $chunks;
     }
 
     /**
@@ -110,7 +112,9 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
     protected function addAllAttributeDataToDocuments($chunk)
     {
         foreach ($this->getEntityAttributes() as $attribute) {
+            $timeStart = microtime(true);
             $this->addAttributeDataToDocuments($attribute, $chunk);
+            Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Added Attribute "%s" Information to Documents in %.4f seconds', $attribute->getAttributeCode(), microtime(true) - $timeStart));
         }
         return $this;
     }
@@ -155,15 +159,23 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      */
     public function reindexStore()
     {
+        $storeTimeStart = microtime(true);
         foreach ($this->getProductChunks() as $chunk) {
             Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Reindexing product chunk %u - %u', $chunk['from'], $chunk['to']));
             // prepare filter table for faster prefiltered queries
             $this->getResourceModel()->prepareProductFilterTable($this->getWebsiteId(), $chunk);
+            $timeStart = microtime(true);
             $this->createIndexDocuments($chunk);
+            Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Prepared chunk Documents in %.4f seconds', microtime(true) - $timeStart));
+            $timeStart = microtime(true);
             $this->addAllAttributeDataToDocuments($chunk);
+            Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Added all attribute data to chunk in %.4f seconds', microtime(true) - $timeStart));
             #$this->addCategoryRelations($chunk);
+            $timeStart = microtime(true);
             $this->getIndexerClient()->sendBulk();
+            Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Added chunk data in  %.4f seconds', microtime(true) - $timeStart));
         }
+        Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Reindexed Store %u in  %.4f seconds', $this->getStoreId(), microtime(true) - $storeTimeStart));
         return $this;
     }
 }
