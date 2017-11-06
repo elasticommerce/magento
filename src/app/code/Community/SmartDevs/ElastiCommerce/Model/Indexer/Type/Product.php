@@ -86,16 +86,16 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             $document->addResultData($values);
             // system attributes need special handling
             if (false === boolval($attribute->getIsUserDefinded())) {
-                continue;
+                #continue;
             }
             //add attribute to sort
             if (true === boolval($attribute->getUsedForSortBy())) {
                 $document->addSort($attribute->getSortColumnField(), $values[$attribute->getSortColumnField()], $attribute->getSortFieldType());
             }
             // add filterable attribute data
-            if (true === boolval($attribute->getIsFilterable())) {
-                $document->addFilter($attribute->getSortColumnField(), $values[$attribute->getSortColumnField()], $attribute->getSortFieldType());
-            }
+            #if (true === boolval($attribute->getIsFilterable())) {
+            #    $document->addFilter($attribute->getSortColumnField(), $values[$attribute->getSortColumnField()], $attribute->getSortFieldType());
+            #}
             // add facette data
         }
         return $this;
@@ -115,6 +115,43 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
         return $this;
     }
 
+    protected function addCategoryRelations($chunk)
+    {
+        $result = $this->getResourceModel()->getProductToCategoryRelations($this->getWebsiteId(), $this->getStoreId(), $chunk);
+        foreach ($result as $id => $data) {
+            $document = $this->getDocument($this->getDocumentId($id));
+            foreach ($data['sort'] as $key => $value) {
+                $document->addSort($key, $value, \SmartDevs\ElastiCommerce\Index\Document::SORT_NUMBER);
+            }
+        }
+    }
+
+    /**
+     * extend the default mapping for different actions
+     *
+     * @return $this
+     */
+    public function addTypeMapping()
+    {
+        $mapping = $this->getResultFieldMapping();
+        foreach ($this->getEntityAttributes() as $attribute) {
+            $columns = $attribute->getFlatColumns();
+            foreach ($columns as $columnName => $columnValue) {
+                if ($attribute->getIsSearchable() && sprintf('%s_value', $attribute->getAttributeCode()) === $columnName) {
+                    $mapping->getCollection()->getField($columnName, 'string')->setIndex('no')->setStore('yes')->setCopyTo('search.fulltext')->setCopyTo('search.fulltext_boosted')->setCopyTo('completion');
+                } elseif ($attribute->getIsSearchable() && false === array_key_exists(sprintf('%s_value', $attribute->getAttributeCode()), $columns)) {
+                    $mapping->getCollection()->getField($columnName, 'string')->setIndex('no')->setStore('yes')->setCopyTo('search.fulltext')->setCopyTo('search.fulltext_boosted')->setCopyTo('completion');
+                }
+            }
+        }
+        return $this;
+    }
+
+    protected function submitBulkCollection()
+    {
+        $this->getIndexerClient()->sendBulk();
+    }
+
     /**
      * reindex complete store
      *
@@ -130,6 +167,8 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
                     $chunk['to']));
             $this->createIndexDocuments($chunk);
             $this->addAllAttributeDataToDocuments($chunk);
+            $this->addCategoryRelations($chunk);
+            $this->getIndexerClient()->sendBulk();
         }
         return $this;
     }

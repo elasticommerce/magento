@@ -76,6 +76,10 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_AbstractEav
                     $attribute->setSortColumnField($this->getAttributeSortColumn($attribute));
                     $attribute->setSortFieldType($this->getAttributeSortFieldType($attribute));
                 }
+                #if (true === boolval($attribute->getIsFilterable())) {
+                #    $attribute->setFilterColumnField($this->getAttributeFilterColumn($attribute));
+                #    $attribute->setFilterFieldType($this->getAttributeFilterFieldType($attribute));
+                #}
             }
         }
         return $this->entityAttributes;

@@ -216,6 +216,22 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
     }
 
     /**
+     * @return \SmartDevs\ElastiCommerce\Index\Type\Mapping\Field\FieldCollection
+     */
+    protected function getFieldMapping()
+    {
+        return $this->getIndexerClient()->getTypeMapping($this->getDocumentType())->getMappingFields();
+    }
+
+    /**
+     * @return \SmartDevs\ElastiCommerce\Index\Type\Mapping\Field\FieldCollection
+     */
+    protected function getResultFieldMapping()
+    {
+        return $this->getIndexerClient()->getTypeMapping($this->getDocumentType())->getMappingFields()->getItemById('result');
+    }
+
+    /**
      * create a new document
      *
      * @param int $id
@@ -238,11 +254,11 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
     }
 
     /**
-     * @return array
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
      */
-    public function getTypeMapping(): array
+    public function addTypeMapping()
     {
-        return array();
+        return $this;
     }
 
     /**

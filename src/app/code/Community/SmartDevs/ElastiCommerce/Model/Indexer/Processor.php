@@ -181,8 +181,8 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Processor
     protected function registerDocumentTypes()
     {
         foreach ($this->getAllIndexerTypes() as $type) {
-            /** @var $indexerType SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract */
-            $this->getIndexerClient()->registerDocumentType($this->getIndexerTypeInstance($type)->getDocumentType());
+            $this->getIndexerClient()->registerDocumentType($type);
+            $this->getIndexerTypeInstance($type)->addTypeMapping();
         }
         return $this;
     }
