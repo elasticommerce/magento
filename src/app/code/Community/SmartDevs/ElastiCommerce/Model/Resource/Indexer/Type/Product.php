@@ -8,6 +8,7 @@
  */
 class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Abstract
 {
+    const TMP_TABLE_NAME = 'elasticommerce_product_status';
 
     /**
      * Initialize connection
@@ -16,6 +17,54 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
     protected function _construct()
     {
         $this->_init('catalog/product', 'entity_id');
+    }
+
+    /**
+     * @return string
+     */
+    protected function getStatusFilterTableName()
+    {
+        return self::TMP_TABLE_NAME;
+    }
+
+    /**
+     * prepare prefiltered table with status etc
+     *
+     * @param int $websiteId
+     * @param array $productIds
+     * @return $this
+     */
+    public function prepareProductFilterTable($websiteId, $productIds = array())
+    {
+        // create temp table for faster joins
+        if (true === $this->_getWriteAdapter()->isTableExists($this->getStatusFilterTableName())) {
+            $this->_getWriteAdapter()->dropTable($this->getStatusFilterTableName());
+        }
+        $table = new Varien_Db_Ddl_Table();
+        $table->setName($this->getStatusFilterTableName());
+        $table->addColumn('entity_id', Varien_Db_Ddl_Table::TYPE_INTEGER, null, array(
+            'identity' => true,
+            'unsigned' => true,
+            'nullable' => false,
+            'primary' => true,
+        ), 'Entity ID');
+        $this->_getWriteAdapter()->createTable($table);
+        /** @var Mage_Catalog_Model_Resource_Product_Collection $collection */
+        $collection = Mage::getModel('catalog/product')->getCollection();
+        $collection->addWebsiteFilter($websiteId);
+        $collection->addAttributeToFilter('status', Mage_Catalog_Model_Product_Status::STATUS_ENABLED);
+        $collection->addAttributeToFilter('visibility', array('eq' => Mage_Catalog_Model_Product_Visibility::VISIBILITY_BOTH));
+        $collection->getSelect()->reset(Varien_Db_Select::COLUMNS);
+        $collection->getSelect()->columns(array('e.entity_id'));
+        if (true === isset($productIds['from']) && true === isset($productIds['to'])) {
+            $collection->getSelect()->where('e.entity_id >= ? ', (int)$productIds['from']);
+            $collection->getSelect()->where('e.entity_id <= ? ', (int)$productIds['to']);
+        } else if (true === is_array($productIds)) {
+            $collection->getSelect()->where('e.entity_id IN (?)', array_map('intval', $productIds['in']));
+        }
+        $insertQuery = $this->_getWriteAdapter()->insertFromSelect($collection->getSelect(), $this->getStatusFilterTableName(), array('entity_id'));
+        $this->_getWriteAdapter()->query($insertQuery);
+        return $this;
     }
 
     /**
@@ -64,13 +113,15 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
         //     GROUP_CONCAT(IF(e.is_parent = 0, e.category_id, '') SEPARATOR ';') AS `anchors`,
         //     GROUP_CONCAT(CONCAT(e.category_id, '_', e.position) SEPARATOR ';') AS `sort`
         // FROM `catalog_product_website` AS `wp`
-        // INNER JOIN `catalog_category_product_index` AS `e` ON wp.product_id = e.product_id AND (e.store_id = 1)
+        //      INNER JOIN `elasticommerce_product_status` AS `status` ON wp.product_id = status.entity_id
+        //      INNER JOIN `catalog_category_product_index` AS `e` ON wp.product_id = e.product_id AND (e.store_id = 1)
         // WHERE
         //     (wp.product_id >= 231 ) AND (wp.product_id <= 3333333 )
         //     AND (wp.website_id = 1)
         // GROUP BY `wp`.`product_id`
         // ORDER BY NULL
         $select->from(array('wp' => $this->getTable('catalog/product_website')), null)
+            ->join(array('status' => $this->getStatusFilterTableName()), 'wp.product_id = status.entity_id', null)
             ->join(
                 array('e' => $this->getTable('catalog/category_product_index')),
                 'wp.product_id = e.product_id',
@@ -150,11 +201,13 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
         //   `e`.`updated_at`
         //   `e`.`sku`
         // FROM `catalog_product_website` AS `wp`
+        //   INNER JOIN `elasticommerce_product_status` AS `status` ON wp.product_id = status.entity_id
         //   INNER JOIN `catalog_product_entity` AS `e` ON wp.product_id = e.entity_id
         // WHERE
         //   (wp.product_id >= 15006 ) AND (wp.product_id <= 16000 ) AND (wp.website_id = 1)
         // ORDER BY NULL
         $select->from(array('wp' => $this->getTable('catalog/product_website')), null)
+            ->join(array('status' => $this->getStatusFilterTableName()), 'wp.product_id = status.entity_id', null)
             ->join(
                 array('e' => $this->getTable('catalog/product')),
                 'wp.product_id = e.entity_id',
@@ -205,12 +258,14 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
         // SELECT SQL_NO_CACHE
         //   `e`.`entity_id`,
         //   `e`.`updated_at`
-        // FROM FROM `catalog_product_website` AS `wp`
+        //  FROM `catalog_product_website` AS `wp`
+        //   INNER JOIN `elasticommerce_product_status` AS `status` ON wp.product_id = status.entity_id
         //   INNER JOIN `catalog_product_entity` AS `e` ON wp.product_id = e.entity_id
         // WHERE
         //   (wp.product_id >= 15006 ) AND (wp.product_id <= 16000 ) AND (wp.website_id = 1)
         // ORDER BY NULL
         $select->from(['wp' => $this->getTable('catalog/product_website')], null)
+            ->join(array('status' => $this->getStatusFilterTableName()), 'wp.product_id = status.entity_id', null)
             ->join(
                 array('e' => $this->getTable('catalog/product')),
                 'wp.product_id = e.entity_id',
