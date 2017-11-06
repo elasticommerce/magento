@@ -46,7 +46,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
     protected function getProductChunks()
     {
         $range = $this->getResourceModel()->getProductRange($this->getWebsiteId());
-        return $this->getChunksByRange((int)$range['start'], (int)$range['end']);
+        return $this->getChunksByRange((int)$range['start'], (int)$range['end'], 1500);
     }
 
     /**
@@ -147,11 +147,6 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
         return $this;
     }
 
-    protected function submitBulkCollection()
-    {
-        $this->getIndexerClient()->sendBulk();
-    }
-
     /**
      * reindex complete store
      *
@@ -161,13 +156,12 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
     public function reindexStore()
     {
         foreach ($this->getProductChunks() as $chunk) {
-            Mage::helper('elasticommerce/log')->log(Zend_Log::INFO,
-                sprintf('Reindexing product chunk %u - %u',
-                    $chunk['from'],
-                    $chunk['to']));
+            Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Reindexing product chunk %u - %u', $chunk['from'], $chunk['to']));
+            // prepare filter table for faster prefiltered queries
+            $this->getResourceModel()->prepareProductFilterTable($this->getWebsiteId(), $chunk);
             $this->createIndexDocuments($chunk);
             $this->addAllAttributeDataToDocuments($chunk);
-            $this->addCategoryRelations($chunk);
+            #$this->addCategoryRelations($chunk);
             $this->getIndexerClient()->sendBulk();
         }
         return $this;
