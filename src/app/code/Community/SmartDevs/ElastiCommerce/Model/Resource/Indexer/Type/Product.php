@@ -28,13 +28,41 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
     }
 
     /**
+     * get product range for current store
+     *
+     * @param int $websiteId
+     * @return array
+     */
+    public function getProductRange($websiteId)
+    {
+        /** @var Varien_Db_Select $select */
+        $select = $this->getSelect();
+        // SELECT SQL_NO_CACHE
+        //   min(e.entity_id) AS `start`,
+        //   max(e.entity_id) AS `end`
+        // FROM `catalog_product_entity` AS `e`
+        //   INNER JOIN `catalog_product_website` AS `wp` ON e.entity_id = wp.product_id AND wp.website_id = :website_id
+        // ORDER BY NULL
+        // LIMIT 1
+        $select->from(array('e' => $this->getTable('catalog/product')),
+            array('start' => new Zend_Db_Expr('min(e.entity_id)'), 'end' => new Zend_Db_Expr('max(e.entity_id)')))
+            ->join(
+                array('wp' => $this->getTable('catalog/product_website')),
+                'e.entity_id = wp.product_id AND wp.website_id = :website_id',
+                array())
+            ->limit(1)
+            ->order(new Zend_Db_Expr('NULL')); //ORDER BY NULL to avoid unnecessary sorting
+        return $this->_getReadAdapter()->query($select, array('website_id' => $websiteId))->fetch();
+    }
+
+    /**
      * prepare prefiltered table with status etc
      *
      * @param int $websiteId
      * @param array $productIds
      * @return $this
      */
-    public function prepareProductFilterTable($websiteId, $productIds = array())
+    public function prepareProductPreFilter($websiteId, array $productIds)
     {
         // create temp table for faster joins
         if (true === $this->_getWriteAdapter()->isTableExists($this->getStatusFilterTableName())) {
@@ -68,31 +96,45 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
     }
 
     /**
-     * get product range for current store
+     * get default static attribute values
      *
-     * @param int $websiteId
-     * @return array
+     * @param $websiteId
+     * @return mixed
      */
-    public function getProductRange($websiteId)
+    public function getDefaultProductAttributeValues($websiteId)
     {
         /** @var Varien_Db_Select $select */
         $select = $this->getSelect();
         // SELECT SQL_NO_CACHE
-        //   min(e.entity_id) AS `start`,
-        //   max(e.entity_id) AS `end`
+        //   `e`.`entity_id`,
+        //   `e`.`type_id`,
+        //   `e`.`attribute_set_id`
+        //   `e`.`created_at`
+        //   `e`.`updated_at`
+        //   `e`.`sku`
         // FROM `catalog_product_entity` AS `e`
-        //   INNER JOIN `catalog_product_website` AS `wp` ON e.entity_id = wp.product_id AND wp.website_id = :website_id
+        //   INNER JOIN `elasticommerce_product_status` AS `status` ON e.entity_id = status.entity_id
+        // WHERE
         // ORDER BY NULL
-        // LIMIT 1
-        $select->from(array('e' => $this->getTable('catalog/product')),
-            array('start' => new Zend_Db_Expr('min(e.entity_id)'), 'end' => new Zend_Db_Expr('max(e.entity_id)')))
-            ->join(
-                array('wp' => $this->getTable('catalog/product_website')),
-                'e.entity_id = wp.product_id AND wp.website_id = :website_id',
-                array())
-            ->limit(1)
-            ->order(new Zend_Db_Expr('NULL')); //ORDER BY NULL to avoid unnecessary sorting
-        return $this->_getReadAdapter()->query($select, array('website_id' => $websiteId))->fetch();
+        $select->from(
+            ['e' => $this->getTable('catalog/product'),
+                [
+                    'e.entity_id',
+                    'e.entity_type_id',
+                    'e.attribute_set_id',
+                    'e.type_id',
+                    'e.created_at',
+                    'e.updated_at',
+                    'e.sku'
+                ]
+            ]
+        );
+        $select->joinInner(['status' => $this->getStatusFilterTableName()], 'e.entity_id = status.entity_id', null);
+        $select->order(new Zend_Db_Expr('NULL')); //ORDER BY NULL to avoid unnecessary sorting
+        return array_reduce($this->_getWriteAdapter()->query($select)->fetchAll(), function ($result, $row) {
+            $result[$row['entity_id']] = $row;
+            return $result;
+        }, []);
     }
 
     /**
@@ -182,6 +224,21 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
         );
     }
 
+    public function getStaticAttributeValues()
+    {
+
+    }
+
+#    public function getAttributeValues()
+#    {#
+#
+#    }
+
+    public function getOptionValues()
+    {
+
+    }
+
     /**
      * get all default attributes for complete reindex
      *
@@ -236,13 +293,13 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
 
     /**
      * @param Mage_Eav_Model_Entity_Attribute_Abstract $attribute
-     * @param $websiteId
-     * @param $storeId
+     * @param int $websiteId
+     * @param int $storeId
      * @param array $productIds
      * @return array
      * @throws Zend_Db_Select_Exception
      */
-    public function getEavAttributeValues($attribute, $websiteId, $storeId, array $productIds)
+    public function getAttributeValues($attribute, $storeId)
     {
         // we don't deal here with static stuff
         if ($attribute->getBackendType() == Mage_Eav_Model_Attribute::TYPE_STATIC) {
@@ -252,31 +309,13 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
         if (count($attribute->getFlatColumns()) == 0) {
             return [];
         }
-        Mage::log((string)$attribute->getAttributeCode(), null, 'attribute.log', true);
         /** @var Varien_Db_Select $select */
         $select = $this->getSelect();
         // SELECT SQL_NO_CACHE
         //   `e`.`entity_id`,
-        //   `e`.`updated_at`
-        //  FROM `catalog_product_website` AS `wp`
-        //   INNER JOIN `elasticommerce_product_status` AS `status` ON wp.product_id = status.entity_id
-        //   INNER JOIN `catalog_product_entity` AS `e` ON wp.product_id = e.entity_id
-        // WHERE
-        //   (wp.product_id >= 15006 ) AND (wp.product_id <= 16000 ) AND (wp.website_id = 1)
+        //  FROM `elasticommerce_product_status` AS `e`
         // ORDER BY NULL
-        $select->from(['wp' => $this->getTable('catalog/product_website')], null)
-            ->join(array('status' => $this->getStatusFilterTableName()), 'wp.product_id = status.entity_id', null)
-            ->join(
-                array('e' => $this->getTable('catalog/product')),
-                'wp.product_id = e.entity_id',
-                array('entity_id'));
-        if (true === isset($productIds['from']) && true === isset($productIds['to'])) {
-            $select->where('wp.product_id >= ? ', (int)$productIds['from']);
-            $select->where('wp.product_id <= ? ', (int)$productIds['to']);
-        } else if (true === is_array($productIds)) {
-            $select->where('wp.product_id IN (?)', array_map('intval', $productIds['in']));
-        }
-        $select->where('wp.website_id = ?', (int)$websiteId);
+        $select->from(['e' => $this->getStatusFilterTableName()], ['entity_id']);
         $select->order(new Zend_Db_Expr('NULL'));//ORDER BY NULL to avoid unnecessary sorting
 
         /** @var Mage_Eav_Model_Entity_Attribute_Abstract $attribute */

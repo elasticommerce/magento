@@ -169,9 +169,9 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
     {
         $total = $offsetEnd - $offsetStart;
         $chunksCount = ceil($total / $chunksize);
-        $chunks = array();
+        $chunks = [];
         for ($i = 0; $i < $chunksCount; $i++) {
-            $chunks[] = array('from' => intval($offsetStart + ($chunksize * $i)), 'to' => intval($offsetStart + (($chunksize * $i) + $chunksize - 1)));
+            $chunks[] = ['from' => intval($offsetStart + ($chunksize * $i)), 'to' => intval($offsetStart + (($chunksize * $i) + $chunksize - 1))];
         }
         return $chunks;
     }
