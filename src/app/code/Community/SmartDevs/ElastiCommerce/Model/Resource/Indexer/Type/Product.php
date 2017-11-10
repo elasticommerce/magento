@@ -177,7 +177,6 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
             $result[$row['entity_id']] = array_diff_key($row, ['entity_id' => true]);
             return $result;
         }, []);
-        return $return;
     }
 
     public function getStaticAttributeValues()
@@ -189,10 +188,26 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
 #    {#
 #
 #    }
-
-    public function getOptionValues()
+    /**
+     * @param Mage_Eav_Model_Entity_Attribute_Abstract $attribute
+     * @param int $storeId
+     * @param array $optionIds
+     *
+     * @return array
+     */
+    public function getOptionValues($attribute, $storeId, $optionIds = array())
     {
-
+        /** @var Varien_Db_Select $select */
+        $select = $this->getSelect();
+        $select->from(['eav' => $this->getTable('eav/attribute_option')], ['option_id']);
+        $select->joinInner(['tdv' => $this->getTable('eav/attribute_option_value')], 'tdv.option_id = eav.option_id AND tdv.store_id = 0', null);
+        $select->joinLeft(['tsv' => $this->getTable('eav/attribute_option_value')], 'tsv.option_id = eav.option_id AND tsv.store_id = ' . $storeId, null);
+        $select->where('eav.attribute_id = ?', $attribute->getAttributeId());
+        $select->columns(['label' => new Zend_Db_Expr('COALESCE(tsv.value, tdv.value)')]);
+        if (true === is_array($optionIds) && count($optionIds) > 0) {
+            $select->where('eav.option_id IN (?)', array_map('intval', $optionIds));
+        }
+        return $this->_getWriteAdapter()->query($select)->fetchAll(PDO::FETCH_KEY_PAIR);
     }
 
     /**

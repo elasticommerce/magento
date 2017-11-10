@@ -28,6 +28,11 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
         return Mage_Catalog_Model_Product::ENTITY;
     }
 
+    protected function getChunkSize()
+    {
+        return intval(Mage::getStoreConfig('elasticommerce/index/chunk_size', $this->getStoreId()));
+    }
+
     /**
      * get Resource
      *
@@ -46,7 +51,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
     protected function getProductChunks()
     {
         $range = $this->getResourceModel()->getProductRange($this->getWebsiteId());
-        $chunks = $this->getChunksByRange((int)$range['start'], (int)$range['end'], 1500);
+        $chunks = $this->getChunksByRange((int)$range['start'], (int)$range['end'], $this->getChunkSize());
         Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Reindexing %u chunks', count($chunks)));
         return $chunks;
     }

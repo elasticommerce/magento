@@ -75,7 +75,8 @@
                 <auth_password/>
             </connection>
             <index>
-                <number_of_shards>5</number_of_shards>
+                <chunk_size>5000</chunk_size>
+                <number_of_shards>1</number_of_shards>
                 <number_of_replicas>1</number_of_replicas>
                 <prefix>elasticommerce</prefix>
                 <analyzer_config_file>analyzer.xml</analyzer_config_file>

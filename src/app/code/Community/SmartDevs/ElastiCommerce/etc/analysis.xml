@@ -14,7 +14,8 @@
     <!-- tokenizer declarations -->
     <tokenizer></tokenizer>
     <!-- token filter declarations -->
-    <token_filter></token_filter>
+    <token_filter>
+    </token_filter>
     <!-- analyzer declarations -->
     <analyzer>
         <!-- analyzer for auto competition -->
@@ -28,9 +29,13 @@
         <full_text_search type="custom">
             <tokenizer>whitespace</tokenizer>
             <filter>
-                <lowercase/>
                 <word_delimiter/>
+                <lowercase/>
                 <unique/>
+                <synonym/>
+                <decompound/>
+                <snowball/>
+                <stop/>
             </filter>
         </full_text_search>
         <full_text_search_boosted type="custom">
