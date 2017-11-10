@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "description": "SmartDevs ElastiCommerce Module for Magento 1",
   "require": {
-    "smart-devs/elasticommerce-base": "~1.0",
+    "smart-devs/elasticommerce-base": "*",
     "psr/log": "~1.0"
   },
   "suggest": {
