@@ -7,7 +7,7 @@
  * Time: 21:41
  */
 class SmartDevs_ElastiCommerce_Model_Indexer_Type_Category
-    extends SmartDevs_ElastiCommerce_Model_Indexer_Type_AbstractEav
+    extends SmartDevs_ElastiCommerce_Model_Indexer_Type_AbstractEntity
     implements SmartDevs_ElastiCommerce_Model_Indexer_Type_Interface
 {
     protected static $indexerType = 'category';

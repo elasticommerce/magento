@@ -7,7 +7,7 @@
  * Time: 21:41
  */
 class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
-    extends SmartDevs_ElastiCommerce_Model_Indexer_Type_AbstractEav
+    extends SmartDevs_ElastiCommerce_Model_Indexer_Type_AbstractEntity
     implements SmartDevs_ElastiCommerce_Model_Indexer_Type_Interface
 {
 
@@ -55,7 +55,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      * prepare product prefilter table for faster indexing speed
      *
      * @param array $productIds
-     * @return bool
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      */
     protected function prepareProductPreFilter(array $productIds)
     {
@@ -67,9 +67,9 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      * creates index documents and attach it to the Document Collection in indexer Client
      *
      * @param array $chunk
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      */
-    protected function createIndexDocuments($chunk)
+    protected function createIndexDocuments()
     {
         $rawData = $this->getResourceModel()->getDefaultProductAttributeValues($this->getWebsiteId());
         foreach ($rawData as $id => $rawData) {
@@ -85,9 +85,9 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      *
      * @param Mage_Eav_Model_Entity_Attribute $attribute
      * @param $chunk
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      */
-    protected function addAttributeDataToDocuments(Mage_Eav_Model_Entity_Attribute $attribute, $chunk)
+    protected function addAttributeDataToDocuments(Mage_Eav_Model_Entity_Attribute $attribute)
     {
         $rawData = $this->getResourceModel()->getAttributeValues($attribute, $this->getStoreId());
         foreach ($rawData as $id => $values) {
@@ -112,43 +112,29 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
     }
 
     /**
-     * loop over all attributes and add them
+     * add product to category relations
      *
-     * @param array $chunk
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      */
-    protected function addAllAttributeDataToDocuments($chunk)
+    protected function addCategoryRelations()
     {
-        foreach ($this->getEntityAttributes() as $attribute) {
-            #$timeStart = microtime(true);
-            $this->addAttributeDataToDocuments($attribute, $chunk);
-            #Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Added Attribute "%s" Information to Documents in %.4f seconds', $attribute->getAttributeCode(), microtime(true) - $timeStart));
+        $result = $this->getResourceModel()->getProductToCategoryRelations($this->getStoreId());
+        foreach ($result as $id => $data) {
+            $document = $this->getDocument($this->getDocumentId($id));
+            foreach (array_values(array_filter(explode(';', $data['sort']))) as $sort) {
+                list($categoryId, $position) = explode('_', $sort);
+                $document->addSort('category_' . $categoryId, $position, \SmartDevs\ElastiCommerce\Index\Document::SORT_NUMBER);
+            }
+            $document->addFilter('categories', array_values(array_filter(explode(';', $data['categories']))), \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
+            $document->addFilter('anchors', array_values(array_filter(explode(';', $data['anchors']))), \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
         }
         return $this;
     }
 
     /**
-     * add product to category relations
-     *
-     * @param $chunk
-     */
-    protected function addCategoryRelations($chunk)
-    {
-        $result = $this->getResourceModel()->getProductToCategoryRelations($this->getWebsiteId(), $this->getStoreId(), $chunk);
-        foreach ($result as $id => $data) {
-            $document = $this->getDocument($this->getDocumentId($id));
-            foreach ($data['sort'] as $key => $value) {
-                $document->addSort($key, $value, \SmartDevs\ElastiCommerce\Index\Document::SORT_NUMBER);
-            }
-            $document->addFilter('categories', $data['categories'], \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
-            $document->addFilter('anchors', $data['anchors'], \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
-        }
-    }
-
-    /**
      * extend the default mapping for different actions
      *
-     * @return $this
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      */
     public function addTypeMapping()
     {
@@ -170,7 +156,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      * reindex complete store
      *
      * @param Mage_Core_Model_Store $store
-     * @return $this
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      */
     public function reindexStore()
     {
@@ -183,9 +169,11 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             $this->createIndexDocuments($chunk);
             Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Prepared chunk Documents in %.4f seconds', microtime(true) - $timeStart));
             $timeStart = microtime(true);
-            $this->addAllAttributeDataToDocuments($chunk);
+            foreach ($this->getEntityAttributes() as $attribute) {
+                $this->addAttributeDataToDocuments($attribute);
+            }
             Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Added all attribute data to chunk in %.4f seconds', microtime(true) - $timeStart));
-            $this->addCategoryRelations($chunk);
+            $this->addCategoryRelations();
             $timeStart = microtime(true);
             $this->getIndexerClient()->sendBulk();
             Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Added chunk data in  %.4f seconds', microtime(true) - $timeStart));

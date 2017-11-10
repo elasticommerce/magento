@@ -6,7 +6,7 @@
  * Date: 05.02.17
  * Time: 21:25
  */
-abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_AbstractEav
+abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_AbstractEntity
     extends SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
 {
 

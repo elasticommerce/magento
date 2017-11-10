@@ -144,84 +144,40 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
      * @param int $storeId
      * @param array $productIds
      */
-    public function getProductToCategoryRelations($websiteId, $storeId, array $productIds)
+    public function getProductToCategoryRelations($storeId)
     {
         $this->_getWriteAdapter()->query('SET SESSION group_concat_max_len = 10486808576;');
         /** @var Varien_Db_Select $select */
         $select = $this->getSelect();
         // SELECT
-        //     `e`.`product_id` AS `entity_id`,
+        //     `e`.`entity_id`,
         //     GROUP_CONCAT(IF(e.is_parent = 1, e.category_id, '') SEPARATOR ';') AS `categories`,
         //     GROUP_CONCAT(IF(e.is_parent = 0, e.category_id, '') SEPARATOR ';') AS `anchors`,
         //     GROUP_CONCAT(CONCAT(e.category_id, '_', e.position) SEPARATOR ';') AS `sort`
-        // FROM `catalog_product_website` AS `wp`
-        //      INNER JOIN `elasticommerce_product_status` AS `status` ON wp.product_id = status.entity_id
-        //      INNER JOIN `catalog_category_product_index` AS `e` ON wp.product_id = e.product_id AND (e.store_id = 1)
-        // WHERE
-        //     (wp.product_id >= 231 ) AND (wp.product_id <= 3333333 )
-        //     AND (wp.website_id = 1)
+        // FROM `elasticommerce_product_status` AS `wp`
+        //      INNER JOIN `catalog_category_product_index` AS `cpi` ON e.entity_id = cpi.product_id AND (cpi.store_id = 1)
         // GROUP BY `wp`.`product_id`
         // ORDER BY NULL
-        $select->from(array('wp' => $this->getTable('catalog/product_website')), null)
-            ->join(array('status' => $this->getStatusFilterTableName()), 'wp.product_id = status.entity_id', null)
+        $select->from(['e' => $this->getStatusFilterTableName()], ['entity_id'])
             ->join(
-                array('e' => $this->getTable('catalog/category_product_index')),
-                'wp.product_id = e.product_id',
-                array(
-                    'entity_id' => 'product_id',
-                    'categories' => new Zend_Db_Expr("GROUP_CONCAT(IF(e.is_parent = 1, e.category_id, '') SEPARATOR ';')"),
-                    'anchors' => new Zend_Db_Expr("GROUP_CONCAT(IF(e.is_parent = 0, e.category_id, '') SEPARATOR ';')"),
-                    'sort' => new Zend_Db_Expr("GROUP_CONCAT(CONCAT(e.category_id, '_', e.position) SEPARATOR ';')"),
-                ));
-        if (true === isset($productIds['from']) && true === isset($productIds['to'])) {
-            $select->where('wp.product_id >= ? ', (int)$productIds['from']);
-            $select->where('wp.product_id <= ? ', (int)$productIds['to']);
-        } else if (true === is_array($productIds)) {
-            $select->where('wp.product_id IN (?)', array_map('intval', $productIds['in']));
-        }
-        $select->where('wp.website_id = ?', (int)$websiteId);
-        $select->where('e.store_id = ?', $storeId);
-        $select->group('wp.product_id');
+                ['cpi' => $this->getTable('catalog/category_product_index')],
+                'e.entity_id = cpi.product_id',
+                [
+                    'categories' => new Zend_Db_Expr("GROUP_CONCAT(IF(cpi.is_parent = 1, cpi.category_id, '') SEPARATOR ';')"),
+                    'anchors' => new Zend_Db_Expr("GROUP_CONCAT(IF(cpi.is_parent = 0, cpi.category_id, '') SEPARATOR ';')"),
+                    'sort' => new Zend_Db_Expr("GROUP_CONCAT(CONCAT(cpi.category_id, '_', cpi.position) SEPARATOR ';')"),
+                ]
+            );
+        $select->where('cpi.store_id = ?', $storeId);
+        $select->group('e.entity_id');
         // ORDER BY NULL to avoid second sorting run with filesort on disc
         // sorting is already done within group by
         $select->order(new Zend_Db_Expr('NULL'));
-        $return = array();
-        foreach ($this->_getWriteAdapter()->query($select)->fetchAll() as $productRow) {
-            $productId = $productRow['entity_id'];
-            $return[$productId] = $this->processProductToCategoryRelationsResponse($productRow);
-        }
+        return array_reduce($this->_getWriteAdapter()->query($select)->fetchAll(), function ($result, $row) {
+            $result[$row['entity_id']] = array_diff_key($row, ['entity_id' => true]);
+            return $result;
+        }, []);
         return $return;
-    }
-
-    /**
-     * Processing the data for productRow in method getProductToCategoryRelations
-     *
-     * @param array $productRow
-     * @return array
-     */
-    protected function processProductToCategoryRelationsResponse(array $productRow)
-    {
-        //get all categories for product
-        $categories = array();
-        foreach (array_values(array_filter(explode(';', $productRow['categories']))) as $categoryId) {
-            $categories[] = (int)$categoryId;
-        }
-        //get all anchors where product is visible
-        $anchors = array();
-        foreach (array_values(array_filter(explode(';', $productRow['anchors']))) as $categoryId) {
-            $anchors[] = (int)$categoryId;
-        }
-        //get sort order for all categories and anchors
-        $sortOrder = array();
-        foreach (explode(';', $productRow['sort']) as $productSort) {
-            list($categoryId, $position) = explode('_', $productSort);
-            $sortOrder['category_' . $categoryId] = (int)$position;
-        }
-        return array(
-            'categories' => $categories,
-            'anchors' => $anchors,
-            'sort' => $sortOrder,
-        );
     }
 
     public function getStaticAttributeValues()
