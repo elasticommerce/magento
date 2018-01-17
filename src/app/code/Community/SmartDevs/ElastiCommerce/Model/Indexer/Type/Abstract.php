@@ -199,7 +199,7 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
                 return 'date';
             }
             default: {
-                return 'string';
+                return 'text';
             }
         }
     }
