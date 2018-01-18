@@ -128,7 +128,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
                     foreach (explode(',', $values[$attribute->getAttributeCode()]) as $optionId) {
                         $document->addFilter($attribute->getAttributeCode(), $optionId,
                             \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER,
-                            serialize(['id' => $optionId, 'value' => $attributeOptions[$optionId]]));
+                            json_encode(['id' => $optionId, 'value' => $attributeOptions[$optionId]]));
                     }
                     #array_walk(explode(',', $values[$attribute->getAttributeCode()]), function($id, $key, $options) {
                     #    $document->addFilter($attribute->getAttributeCode(), explode(',', $values[$attribute->getAttributeCode()]), \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
