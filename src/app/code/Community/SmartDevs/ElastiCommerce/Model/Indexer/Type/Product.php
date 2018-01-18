@@ -114,9 +114,9 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             /** @var SmartDevs_ElastiCommerce_IndexDocument $document */
             $document = $this->getDocument($this->getDocumentId($id));
             $document->addResultData($values);
-            // system attributes need special handling
-            if (false === boolval($attribute->getIsUserDefinded())) {
-                #continue;
+            if (true === in_array($attribute->getAttributeCode(), ['visibility', 'status'])) {
+                $document->addFilter($attribute->getAttributeCode(), $values[$attribute->getAttributeCode()], \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
+                continue;
             }
             //add attribute to sort
             if (true === boolval($attribute->getUsedForSortBy())) {
@@ -125,14 +125,18 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             // add filterable attribute data
             if (true === boolval($attribute->getIsFilterable())) {
                 if ($attribute->getFrontend()->getInputType() === 'select' || $attribute->getFrontend()->getInputType() === 'multiselect') {
-                    $document->addFilter($attribute->getAttributeCode(), explode(',', $values[$attribute->getAttributeCode()]), 'filter-numeric');
+                    foreach (explode(',', $values[$attribute->getAttributeCode()]) as $optionId) {
+                        $document->addFilter($attribute->getAttributeCode(), $optionId,
+                            \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER,
+                            serialize(['id' => $optionId, 'value' => $attributeOptions[$optionId]]));
+                    }
+                    #array_walk(explode(',', $values[$attribute->getAttributeCode()]), function($id, $key, $options) {
+                    #    $document->addFilter($attribute->getAttributeCode(), explode(',', $values[$attribute->getAttributeCode()]), \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
+                    #}, $attributeOptions);
+                    #$document->addFilter($attribute->getAttributeCode(), explode(',', $values[$attribute->getAttributeCode()]), \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
                 } else {
                     $document->addFilter($attribute->getAttributeCode(), $values[$attribute->getAttributeCode()]);
                 }
-            }
-            // add facette data
-            if (true === boolval($attribute->getIsFilterable())) {
-
             }
         }
         return $this;
@@ -170,9 +174,9 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             $columns = $attribute->getFlatColumns();
             foreach ($columns as $columnName => $columnValue) {
                 if ($attribute->getIsSearchable() && sprintf('%s_value', $attribute->getAttributeCode()) === $columnName) {
-                    $mapping->getCollection()->getField($columnName, 'text')->setIndex(true)->setStore(true)->setCopyTo('search.fulltext')->setCopyTo('search.fulltext_boosted')->setCopyTo('completion');
+                    $mapping->getCollection()->getField($columnName, 'text')->setIndex(false)->setStore(true)->setCopyTo('search.fulltext')->setCopyTo('search.fulltext_boosted')->setCopyTo('completion');
                 } elseif ($attribute->getIsSearchable() && false === array_key_exists(sprintf('%s_value', $attribute->getAttributeCode()), $columns)) {
-                    $mapping->getCollection()->getField($columnName, 'text')->setIndex(true)->setStore(true)->setCopyTo('search.fulltext')->setCopyTo('search.fulltext_boosted')->setCopyTo('completion');
+                    $mapping->getCollection()->getField($columnName, 'text')->setIndex(false)->setStore(true)->setCopyTo('search.fulltext')->setCopyTo('search.fulltext_boosted')->setCopyTo('completion');
                 }
             }
         }
