@@ -30,22 +30,21 @@ $installer = $this;
 
 $installer->startSetup();
 
-$installer->getConnection()->addColumn(
-    $installer->getTable('catalog/eav_attribute'),
-    'is_used_for_boosted_search',
-    "tinyint(1) unsigned NOT NULL DEFAULT '0' after `is_searchable`"
-);
+foreach (['color', 'name', 'brand', 'sku'] as $attributeName) {
 
-$installer->getConnection()->addColumn(
-    $installer->getTable('catalog/eav_attribute'),
-    'is_used_for_completion',
-    "tinyint(1) unsigned NOT NULL DEFAULT '0' after `is_searchable`"
-);
+    $attributeId = Mage::getResourceModel('eav/entity_attribute')->getIdByCode('catalog_product', $attributeName);
+    if ($attributeId) {
+        $attribute = Mage::getModel('catalog/resource_eav_attribute')->load($attributeId);
+        $attribute->setIsUsedForBoostedSearch(1)->save();
+    }
+}
+foreach (['color', 'name', 'brand'] as $attributeName) {
 
-$installer->getConnection()->addColumn(
-    $installer->getTable('catalog/eav_attribute'),
-    'is_used_for_suggestions',
-    "tinyint(1) unsigned NOT NULL DEFAULT '0' after `is_searchable`"
-);
+    $attributeId = Mage::getResourceModel('eav/entity_attribute')->getIdByCode('catalog_product', $attributeName);
+    if ($attributeId) {
+        $attribute = Mage::getModel('catalog/resource_eav_attribute')->load($attributeId);
+        $attribute->setIsUsedForCompletion(1)->save();
+    }
+}
 $installer->endSetup();
 

@@ -30,6 +30,13 @@
                 <class>SmartDevs_ElastiCommerce_Model_Resource</class>
             </elasticommerce_resource>
         </models>
+        <resources>
+            <elasticommerce_setup>
+                <setup>
+                    <module>SmartDevs_ElastiCommerce</module>
+                </setup>
+            </elasticommerce_setup>
+        </resources>
         <index>
             <indexer>
                 <catalogsearch_fulltext>
@@ -75,7 +82,7 @@
                 <auth_password/>
             </connection>
             <index>
-                <chunk_size>5000</chunk_size>
+                <chunk_size>1500</chunk_size>
                 <number_of_shards>1</number_of_shards>
                 <number_of_replicas>1</number_of_replicas>
                 <prefix>elasticommerce</prefix>

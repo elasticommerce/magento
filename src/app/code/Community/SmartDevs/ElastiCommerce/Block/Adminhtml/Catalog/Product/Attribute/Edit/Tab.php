@@ -59,20 +59,20 @@ class SmartDevs_ElastiCommerce_Block_Adminhtml_Catalog_Product_Attribute_Edit_Ta
         $form = new Varien_Data_Form();
         $fieldset = $form->addFieldset('elasticommerce', array('legend' => Mage::helper('elasticommerce')->__('Improve search results and user experience with following settings.')));
         // elasticsearch properties fieldset
-        $fieldset->addField('es_completion', 'select', array(
-            'label' => 'Completion',
+        $fieldset->addField('is_used_for_boosted_search', 'select', array(
+            'label' => 'Boosted Search',
             'class' => 'required-entry',
             'values' => Mage::getModel('adminhtml/system_config_source_yesno')->toOptionArray(),
-            'name' => 'es_completion',
+            'name' => 'is_used_for_boosted_search',
             'after_element_html' => sprintf('<p class="nm"><small>%s</small></p>',
-                Mage::helper('elasticommerce')->__('Values of this field should be used as a completion as the user types a query.')
+                Mage::helper('elasticommerce')->__('Values of this field should be boosted in search results')
             )
         ));
-        $fieldset->addField('es_suggestion', 'select', array(
-            'label' => 'Spell checking',
+        $fieldset->addField('is_used_for_completion', 'select', array(
+            'label' => 'Autocompletion',
             'class' => 'required-entry',
             'values' => Mage::getModel('adminhtml/system_config_source_yesno')->toOptionArray(),
-            'name' => 'es_completion',
+            'name' => 'is_used_for_completion',
             'after_element_html' => sprintf('<p class="nm"><small>%s</small></p>',
                 Mage::helper('elasticommerce')->__('Values of this field contains terms that might be suggested as an alternative spelling when a user makes a typo.')
             )

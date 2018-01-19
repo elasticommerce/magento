@@ -83,10 +83,10 @@
             </filter-name>
             <filter-value type="double"/>
         </filter-numeric>
-        <completition type="string">
+        <completion type="string">
             <analyzer>completion_analyzer</analyzer>
             <store>true</store>
-        </completition>
+        </completion>
         <suggestion type="string">
             <analyzer>default</analyzer>
             <!--
