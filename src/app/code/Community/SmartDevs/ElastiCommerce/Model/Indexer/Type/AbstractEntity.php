@@ -10,7 +10,7 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_AbstractEntity
     extends SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
 {
 
-
+    const XML_NODE_ATTRIBUTE_NODES  = 'global/catalog/product/flat/attribute_nodes';
     /**
      * entity type model
      *
@@ -61,21 +61,55 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_AbstractEntity
     public function getEntityAttributes()
     {
         if (null === $this->entityAttributes) {
+            $attributeNodes = Mage::getConfig()
+                ->getNode(self::XML_NODE_ATTRIBUTE_NODES)
+                ->children();
+            foreach ($attributeNodes as $node) {
+                $attributes = Mage::getConfig()->getNode((string)$node)->asArray();
+                $attributes = array_keys($attributes);
+                $this->_systemAttributes = array_unique(array_merge($attributes, $this->_systemAttributes));
+            }
             //preload attribute codes
             $attributeCodes = Mage::getSingleton('eav/config')->getEntityAttributeCodes($this->getEntity());
             foreach ($attributeCodes as $attributeCode) {
                 /** @var Mage_Eav_Model_Entity_Attribute $attribute */
                 $attribute = Mage::getSingleton('eav/config')->getAttribute($this->getEntity(), $attributeCode);
+                switch (true) {
+                    case $attribute->getData('is_used_for_promo_rules') == 1:
+                    case $attribute->getData('used_in_product_listing') == 1:
+                    case $attribute->getData('used_for_sort_by') == 1:
+                    case $attribute->getData('is_filterable') == 1:
+                    case $attribute->getData('is_used_for_suggestions') == 1:
+                    case $attribute->getData('is_used_for_completion') == 1:
+                    case in_array($attributeCode, $this->_systemAttributes):
+                        {
+                            // check if exists source and backend model.
+                            // To prevent exception when some module was disabled
+                            $attribute->usesSource() && $attribute->getSource();
+                            $attribute->getBackend();
+                            $this->entityAttributes[$attribute->getId()] = $attribute;
+                            $this->entityAttributeMap[$attributeCode] = $attribute->getId();
+                            if (true === boolval($attribute->getUsedForSortBy())) {
+                                $attribute->setSortColumnField($this->getAttributeSortColumn($attribute));
+                                $attribute->setSortFieldType($this->getAttributeSortFieldType($attribute));
+                            }
+                            break;
+                        }
+                    default:
+                        {
+                            continue;
+                        }
+                }
                 // check if exists source and backend model.
                 // To prevent exception when some module was disabled
-                $attribute->usesSource() && $attribute->getSource();
-                $attribute->getBackend();
-                $this->entityAttributes[$attribute->getId()] = $attribute;
-                $this->entityAttributeMap[$attributeCode] = $attribute->getId();
-                if (true === boolval($attribute->getUsedForSortBy())) {
-                    $attribute->setSortColumnField($this->getAttributeSortColumn($attribute));
-                    $attribute->setSortFieldType($this->getAttributeSortFieldType($attribute));
-                }
+#                $attribute->usesSource() && $attribute->getSource();
+#                $attribute->getBackend();
+#                $this->entityAttributes[$attribute->getId()] = $attribute;
+#                $this->entityAttributeMap[$attributeCode] = $attribute->getId();
+#                if (true === boolval($attribute->getUsedForSortBy())) {
+#                    $attribute->setSortColumnField($this->getAttributeSortColumn($attribute));
+#                    $attribute->setSortFieldType($this->getAttributeSortFieldType($attribute));
+#                }
                 #if (true === boolval($attribute->getIsFilterable())) {
                 #    $attribute->setFilterColumnField($this->getAttributeFilterColumn($attribute));
                 #    $attribute->setFilterFieldType($this->getAttributeFilterFieldType($attribute));
@@ -102,16 +136,19 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_AbstractEntity
             case strpos($sqltype, 'smallint') === 0:
             case strpos($sqltype, 'tinyint') === 0:
             case strpos($sqltype, 'int') === 0:
-            case strpos($sqltype, 'decimal') === 0: {
-                return SmartDevs_ElastiCommerce_IndexDocument::SORT_NUMBER;
-            }
+            case strpos($sqltype, 'decimal') === 0:
+                {
+                    return SmartDevs_ElastiCommerce_IndexDocument::SORT_NUMBER;
+                }
             case strpos($sqltype, 'datetime') === 0:
-            case strpos($sqltype, 'timestamp') === 0: {
-                return SmartDevs_ElastiCommerce_IndexDocument::SORT_DATE;
-            }
-            default: {
-                return SmartDevs_ElastiCommerce_IndexDocument::SORT_STRING;
-            }
+            case strpos($sqltype, 'timestamp') === 0:
+                {
+                    return SmartDevs_ElastiCommerce_IndexDocument::SORT_DATE;
+                }
+            default:
+                {
+                    return SmartDevs_ElastiCommerce_IndexDocument::SORT_STRING;
+                }
         }
     }
 

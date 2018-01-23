@@ -82,9 +82,9 @@
                 <auth_password/>
             </connection>
             <index>
-                <chunk_size>1500</chunk_size>
-                <number_of_shards>1</number_of_shards>
-                <number_of_replicas>1</number_of_replicas>
+                <chunk_size>3333</chunk_size>
+                <number_of_shards>6</number_of_shards>
+                <number_of_replicas>0</number_of_replicas>
                 <prefix>elasticommerce</prefix>
                 <analyzer_config_file>analyzer.xml</analyzer_config_file>
                 <schema_config_file>schema.xml</schema_config_file>

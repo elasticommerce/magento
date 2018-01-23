@@ -11,6 +11,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
     implements SmartDevs_ElastiCommerce_Model_Indexer_Type_Interface
 {
 
+    protected $_systemAttributes = array('status', 'required_options', 'tax_class_id', 'weight');
     /**
      * indexer type string
      *
@@ -109,7 +110,11 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
     protected function addAttributeDataToDocuments(Mage_Eav_Model_Entity_Attribute $attribute)
     {
         $attributeRawData = $this->getResourceModel()->getAttributeValues($attribute, $this->getStoreId());
-        #$attributeOptions = $this->getAttributeOptions($attribute);
+        if ($attribute->getFrontend()->getInputType() === 'multiselect') {
+            $attributeOptions = $this->getAttributeOptions($attribute);
+        } else {
+            $attributeOptions = [];
+        }
         foreach ($attributeRawData as $id => $values) {
             /** @var SmartDevs_ElastiCommerce_IndexDocument $document */
             $document = $this->getDocument($this->getDocumentId($id));
@@ -129,18 +134,24 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             // add filterable attribute data
             if (true === boolval($attribute->getIsFilterable())) {
                 if ($attribute->getFrontend()->getInputType() === 'select' || $attribute->getFrontend()->getInputType() === 'multiselect') {
-                    #    foreach (explode(',', $values[$attribute->getAttributeCode()]) as $optionId) {
-                    #        $document->addFilter($attribute->getAttributeCode(), $optionId,
-                    #            \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER,
-                    #            json_encode(['id' => $optionId, 'value' => $attributeOptions[$optionId]]));
-                    #    }
-                    #array_walk(explode(',', $values[$attribute->getAttributeCode()]), function($id, $key, $options) {
-                    #    $document->addFilter($attribute->getAttributeCode(), explode(',', $values[$attribute->getAttributeCode()]), \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
-                    #}, $attributeOptions);
                     $document->addFilter($attribute->getAttributeCode(), array_map('intval', explode(',', $values[$attribute->getAttributeCode()])), \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
                 } else {
                     $document->addFilter($attribute->getAttributeCode(), $values[$attribute->getAttributeCode()]);
                 }
+            }
+            //handle multiselect values
+            switch (true) {
+                case $attribute->getFrontend()->getInputType() === 'multiselect' && true === (bool)$attribute->getIsUsedForCompletion():
+                case $attribute->getFrontend()->getInputType() === 'multiselect' && true === (bool)$attribute->getIsSearchable():
+                case $attribute->getFrontend()->getInputType() === 'multiselect' && true === (bool)$attribute->getIsUsedForBoostedSearch():
+                    {
+                        $attributeValues = [];
+                        foreach (explode(',', $values[$attribute->getAttributeCode()]) as $optionId) {
+                            $attributeValues[] = $attributeOptions[$optionId];
+                        }
+                        $document->addResultData([sprintf('%s_values', $attribute->getAttributeCode()) => implode(' ', $attributeValues)]);
+                        break;
+                    }
             }
         }
         return $this;
@@ -176,18 +187,23 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
         $mapping = $this->getResultFieldMapping();
         foreach ($this->getEntityAttributes() as $attribute) {
             $columns = $attribute->getFlatColumns();
-            foreach ($columns as $columnName => $columnValue) {
-                if (sprintf('%s_value', $attribute->getAttributeCode()) === $columnName || false === array_key_exists(sprintf('%s_value', $attribute->getAttributeCode()), $columns)) {
-                    if (true === (bool)$attribute->getIsSearchable()) {
-                        $mapping->getCollection()->getField($columnName, 'text')->setCopyTo('fulltext');
-                    }
-                    if (true === (bool)$attribute->getIsUsedForBoostedSearch()) {
-                        $mapping->getCollection()->getField($columnName, 'text')->setCopyTo('fulltext_boosted');
-                    }
-                    if (true === (bool)$attribute->getIsUsedForCompletion()) {
-                        $mapping->getCollection()->getField($columnName, 'text')->setCopyTo('completion');
-                    }
-                }
+            if (false === array_key_exists(sprintf('%s_value', $attribute->getAttributeCode()), $columns) && $attribute->getFrontend()->getInputType() !== 'multiselect') {
+                $valueColumn = $attribute->getAttributeCode();
+            } elseif ($attribute->getFrontend()->getInputType() !== 'multiselect' && array_key_exists(sprintf('%s_value', $attribute->getAttributeCode()), $columns)) {
+                $valueColumn = sprintf('%s_value', $attribute->getAttributeCode());
+            } elseif ($attribute->getFrontend()->getInputType() === 'multiselect') {
+                $valueColumn = sprintf('%s_values', $attribute->getAttributeCode());
+            } else {
+                $valueColumn = $attribute->getAttributeCode();
+            }
+            if (true === (bool)$attribute->getIsSearchable()) {
+                $mapping->getCollection()->getField($valueColumn, 'keyword')->setCopyTo('fulltext');
+            }
+            if (true === (bool)$attribute->getIsUsedForBoostedSearch()) {
+                $mapping->getCollection()->getField($valueColumn, 'keyword')->setCopyTo('fulltext_boosted');
+            }
+            if (true === (bool)$attribute->getIsUsedForCompletion()) {
+                $mapping->getCollection()->getField($valueColumn, 'keyword')->setCopyTo('completion');
             }
         }
         return $this;
