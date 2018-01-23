@@ -114,8 +114,12 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             /** @var SmartDevs_ElastiCommerce_IndexDocument $document */
             $document = $this->getDocument($this->getDocumentId($id));
             $document->addResultData($values);
-            if (true === in_array($attribute->getAttributeCode(), ['visibility', 'status'])) {
-                $document->addFilter($attribute->getAttributeCode(), $values[$attribute->getAttributeCode()], \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
+            if ($attribute->getAttributeCode() === 'visibility') {
+                $document->setVisibility((int)$values[$attribute->getAttributeCode()]);
+                continue;
+            }
+            if ($attribute->getAttributeCode() === 'status') {
+                $document->setStatus((int)$values[$attribute->getAttributeCode()]);
                 continue;
             }
             //add attribute to sort
@@ -133,7 +137,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
                     #array_walk(explode(',', $values[$attribute->getAttributeCode()]), function($id, $key, $options) {
                     #    $document->addFilter($attribute->getAttributeCode(), explode(',', $values[$attribute->getAttributeCode()]), \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
                     #}, $attributeOptions);
-                    $document->addFilter($attribute->getAttributeCode(), explode(',', $values[$attribute->getAttributeCode()]), \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
+                    $document->addFilter($attribute->getAttributeCode(), array_map('intval', explode(',', $values[$attribute->getAttributeCode()])), \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
                 } else {
                     $document->addFilter($attribute->getAttributeCode(), $values[$attribute->getAttributeCode()]);
                 }
@@ -154,10 +158,10 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             $document = $this->getDocument($this->getDocumentId($id));
             foreach (array_values(array_filter(explode(';', $data['sort']))) as $sort) {
                 list($categoryId, $position) = explode('_', $sort);
-                $document->addSort('category_' . $categoryId, $position, \SmartDevs\ElastiCommerce\Index\Document::SORT_NUMBER);
+                $document->addSort('category_' . $categoryId, (int)$position, \SmartDevs\ElastiCommerce\Index\Document::SORT_NUMBER);
             }
-            $document->addFilter('categories', array_values(array_filter(explode(';', $data['categories']))), \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
-            $document->addFilter('anchors', array_values(array_filter(explode(';', $data['anchors']))), \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
+            $document->setCategories(array_map('intval', array_values(array_filter(explode(';', $data['categories'])))));
+            $document->setAnchors(array_map('intval', array_values(array_filter(explode(';', $data['anchors'])))));
         }
         return $this;
     }
@@ -175,13 +179,13 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             foreach ($columns as $columnName => $columnValue) {
                 if (sprintf('%s_value', $attribute->getAttributeCode()) === $columnName || false === array_key_exists(sprintf('%s_value', $attribute->getAttributeCode()), $columns)) {
                     if (true === (bool)$attribute->getIsSearchable()) {
-                        $mapping->getCollection()->getField($columnName, 'text')->setIndex(false)->setStore(true)->setCopyTo('search.fulltext');
+                        $mapping->getCollection()->getField($columnName, 'text')->setCopyTo('fulltext');
                     }
                     if (true === (bool)$attribute->getIsUsedForBoostedSearch()) {
-                        $mapping->getCollection()->getField($columnName, 'text')->setIndex(false)->setStore(true)->setCopyTo('search.fulltext_boosted');
+                        $mapping->getCollection()->getField($columnName, 'text')->setCopyTo('fulltext_boosted');
                     }
                     if (true === (bool)$attribute->getIsUsedForCompletion()) {
-                        $mapping->getCollection()->getField($columnName, 'text')->setIndex(false)->setStore(true)->setCopyTo('completion');
+                        $mapping->getCollection()->getField($columnName, 'text')->setCopyTo('completion');
                     }
                 }
             }

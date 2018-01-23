@@ -69,8 +69,8 @@
     <elasticommerce>
         <indexer_types>
             <product>elasticommerce/indexer_type_product</product>
-            <category>elasticommerce/indexer_type_category</category>
-            <cms_page>elasticommerce/indexer_type_CmsPage</cms_page>
+            <!--<category>elasticommerce/indexer_type_category</category>
+            <cms_page>elasticommerce/indexer_type_CmsPage</cms_page>-->
         </indexer_types>
     </elasticommerce>
     <default>
