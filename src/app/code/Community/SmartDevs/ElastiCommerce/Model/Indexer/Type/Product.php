@@ -129,14 +129,14 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             }
             //add attribute to sort
             if (true === boolval($attribute->getUsedForSortBy())) {
-                $document->addSort($attribute->getSortColumnField(), $values[$attribute->getSortColumnField()], $attribute->getSortFieldType());
+                $document->addSortString($attribute->getSortColumnField(), $values[$attribute->getSortColumnField()], $attribute->getSortFieldType());
             }
             // add filterable attribute data
             if (true === boolval($attribute->getIsFilterable())) {
                 if ($attribute->getFrontend()->getInputType() === 'select' || $attribute->getFrontend()->getInputType() === 'multiselect') {
-                    $document->addFilter($attribute->getAttributeCode(), array_map('intval', explode(',', $values[$attribute->getAttributeCode()])), \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
+                    $document->addFilterNumeric($attribute->getAttributeCode(), array_map('intval', explode(',', $values[$attribute->getAttributeCode()])), \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
                 } else {
-                    $document->addFilter($attribute->getAttributeCode(), $values[$attribute->getAttributeCode()]);
+                    $document->addFilterString($attribute->getAttributeCode(), $values[$attribute->getAttributeCode()]);
                 }
             }
             //handle multiselect values
@@ -169,7 +169,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             $document = $this->getDocument($this->getDocumentId($id));
             foreach (array_values(array_filter(explode(';', $data['sort']))) as $sort) {
                 list($categoryId, $position) = explode('_', $sort);
-                $document->addSort('category_' . $categoryId, (int)$position, \SmartDevs\ElastiCommerce\Index\Document::SORT_NUMBER);
+                $document->addSortNumeric('category_' . $categoryId, (int)$position, \SmartDevs\ElastiCommerce\Index\Document::SORT_NUMBER);
             }
             $document->setCategories(array_map('intval', array_values(array_filter(explode(';', $data['categories'])))));
             $document->setAnchors(array_map('intval', array_values(array_filter(explode(';', $data['anchors'])))));
