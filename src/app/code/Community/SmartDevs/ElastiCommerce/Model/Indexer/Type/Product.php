@@ -169,7 +169,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             $document = $this->getDocument($this->getDocumentId($id));
             foreach (array_values(array_filter(explode(';', $data['sort']))) as $sort) {
                 list($categoryId, $position) = explode('_', $sort);
-                $document->addSortNumeric('category_' . $categoryId, (int)$position, \SmartDevs\ElastiCommerce\Index\Document::SORT_NUMBER);
+                $document->addSortNumeric('category_' . $categoryId, (int)$position);
             }
             $document->setCategories(array_map('intval', array_values(array_filter(explode(';', $data['categories'])))));
             $document->setAnchors(array_map('intval', array_values(array_filter(explode(';', $data['anchors'])))));
