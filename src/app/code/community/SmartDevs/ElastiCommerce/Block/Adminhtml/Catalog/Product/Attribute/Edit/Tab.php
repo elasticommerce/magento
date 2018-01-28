@@ -77,6 +77,17 @@ class SmartDevs_ElastiCommerce_Block_Adminhtml_Catalog_Product_Attribute_Edit_Ta
                 Mage::helper('elasticommerce')->__('Values of this field contains terms that might be suggested as an alternative spelling when a user makes a typo.')
             )
         ));
+        if(Mage::helper('core')->isModuleEnabled('SmartDevs_ElastiCommerceFilter')){
+            $fieldset->addField('filter_renderer', 'select', array(
+                'label' => 'Filter Renderer',
+                'class' => 'required-entry',
+                'values' => Mage::getModel('elasticommercefilter/system_config_source_renderer')->toOptionArray(),
+                'name' => 'filter_renderer',
+                'after_element_html' => sprintf('<p class="nm"><small>%s</small></p>',
+                    Mage::helper('elasticommerce')->__('Values of this field contains terms that might be suggested as an alternative spelling when a user makes a typo.')
+                )
+            ));
+        }
         $this->setForm($form);
         return $this;
     }

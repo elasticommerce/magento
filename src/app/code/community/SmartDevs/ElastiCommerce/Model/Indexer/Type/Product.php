@@ -81,6 +81,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
         foreach ($rawData as $id => $rawData) {
             $document = $this->createNewDocument((int)$id);
             $document->addResultData($rawData);
+
             $this->getBulkCollection()->addItem($document);
         }
         return $this;
@@ -134,7 +135,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             // add filterable attribute data
             if (true === boolval($attribute->getIsFilterable())) {
                 if ($attribute->getFrontend()->getInputType() === 'select' || $attribute->getFrontend()->getInputType() === 'multiselect') {
-                    $document->addFilterNumeric($attribute->getAttributeCode(), array_map('intval', explode(',', $values[$attribute->getAttributeCode()])), \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
+                    $document->addFilterNumeric($attribute->getAttributeCode(), array_map('intval', explode(',', $values[$attribute->getAttributeCode()])), $this->getAttributeRenderType($attribute), \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
                 } else {
                     $document->addFilterString($attribute->getAttributeCode(), $values[$attribute->getAttributeCode()]);
                 }
@@ -237,5 +238,19 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
         }
         Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Reindexed Store %u in  %.4f seconds', $this->getStoreId(), microtime(true) - $storeTimeStart));
         return $this;
+    }
+
+    /**
+     * @param Mage_Eav_Model_Entity_Attribute $attribute
+     * @return mixed
+     */
+    protected function getAttributeRenderType(Mage_Eav_Model_Entity_Attribute $attribute)
+    {
+        $_helper = Mage::helper('elasticommercefilter');
+        $renderer = '';
+        if($_helper instanceof SmartDevs_ElastiCommerceFilter_Helper_Data) {
+            $renderer = $_helper->getRenderer($attribute->getFilterRenderer());
+        }
+        return $renderer;
     }
 }
