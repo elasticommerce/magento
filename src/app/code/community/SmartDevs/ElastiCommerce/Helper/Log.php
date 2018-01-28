@@ -44,7 +44,7 @@ final class SmartDevs_ElastiCommerce_Helper_Log extends AbstractLogger
      */
     public function log($level, $message, array $context = array())
     {
-        Mage::log($message, self::$_levelMapping[$level], $this->_file, true);
+        Mage::log($message, /*self::$_levelMapping[$level]*/null, $this->_file, true);
         return $this;
     }
 
