@@ -137,7 +137,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
                 if ($attribute->getFrontend()->getInputType() === 'select' || $attribute->getFrontend()->getInputType() === 'multiselect') {
                     $document->addFilterNumeric($attribute->getAttributeCode(), array_map('intval', explode(',', $values[$attribute->getAttributeCode()])), $this->getAttributeRenderType($attribute), \SmartDevs\ElastiCommerce\Index\Document::FILTER_NUMBER);
                 } else {
-                    $document->addFilterString($attribute->getAttributeCode(), $values[$attribute->getAttributeCode()]);
+                    $document->addFilterString($attribute->getAttributeCode(), $values[$attribute->getAttributeCode()], $this->getAttributeRenderType($attribute));
                 }
             }
             //handle multiselect values
