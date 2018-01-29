@@ -163,7 +163,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      *
      * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      */
-    protected function addCategoryRelations()
+    protected function addCategoryRelationData()
     {
         $result = $this->getResourceModel()->getProductToCategoryRelations($this->getStoreId());
         foreach ($result as $id => $data) {
@@ -231,7 +231,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
                 $this->addAttributeDataToDocuments($attribute);
             }
             Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Added all attribute data to chunk in %.4f seconds', microtime(true) - $timeStart));
-            $this->addCategoryRelations();
+            $this->addCategoryRelationData();
             $timeStart = microtime(true);
             $this->getIndexerClient()->sendBulk();
             Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Added chunk data in  %.4f seconds', microtime(true) - $timeStart));
