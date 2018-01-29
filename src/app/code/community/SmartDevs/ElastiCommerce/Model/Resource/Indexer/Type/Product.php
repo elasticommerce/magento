@@ -80,8 +80,8 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
         /** @var Mage_Catalog_Model_Resource_Product_Collection $collection */
         $collection = Mage::getModel('catalog/product')->getCollection();
         $collection->addWebsiteFilter($websiteId);
-        $collection->addAttributeToFilter('status', Mage_Catalog_Model_Product_Status::STATUS_ENABLED);
-        $collection->addAttributeToFilter('visibility', array('eq' => Mage_Catalog_Model_Product_Visibility::VISIBILITY_BOTH));
+        #$collection->addAttributeToFilter('status', Mage_Catalog_Model_Product_Status::STATUS_ENABLED);
+        #$collection->addAttributeToFilter('visibility', array('eq' => Mage_Catalog_Model_Product_Visibility::VISIBILITY_BOTH));
         $collection->getSelect()->reset(Varien_Db_Select::COLUMNS);
         $collection->getSelect()->columns(array('e.entity_id'));
         if (true === isset($productIds['from']) && true === isset($productIds['to'])) {
@@ -179,15 +179,47 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
         }, []);
     }
 
-    public function getStaticAttributeValues()
+    /**
+     * @param $websiteId
+     * @return []
+     */
+    public function getProductStockStatus($websiteId)
     {
+        $select = $this->getSelect();
+        $select->from(['e' => $this->getStatusFilterTableName()], ['entity_id'])
+            ->join(['stst' => $this->getTable('cataloginventory/stock_status')],
+                sprintf('e.entity_id = stst.product_id AND stst.website_id = %u AND stst.stock_id = 1', $websiteId),
+                ['qty', 'stock_status']
+            );
+        $select->order(new Zend_Db_Expr('NULL'));
 
+        return array_reduce($this->_getWriteAdapter()->query($select)->fetchAll(), function ($result, $row) {
+            $result[$row['entity_id']] = ['qty' => $row['qty'], 'stock_status' => $row['stock_status']];
+            return $result;
+        }, []);
     }
 
-#    public function getAttributeValues()
-#    {#
-#
-#    }
+    /**
+     * @param $websiteId
+     * @return []
+     */
+    public function getProductPrices($websiteId)
+    {
+        $select = $this->getSelect();
+        $select->from(['e' => $this->getStatusFilterTableName()], ['entity_id'])
+            ->join(['cpp' => $this->getTable('catalog/product_index_price')],
+                sprintf('e.entity_id = cpp.entity_id AND cpp.customer_group_id >= 0 AND cpp.website_id = %u', $websiteId),
+                ['prices' => new Zend_Db_Expr("GROUP_CONCAT(CONCAT(cpp.customer_group_id, ';', cpp.final_price) SEPARATOR '|')")]
+            );
+        $select->group('e.entity_id');
+        $select->order(new Zend_Db_Expr('NULL'));
+
+        return array_reduce($this->_getWriteAdapter()->query($select)->fetchAll(), function ($result, $row) {
+            $result[$row['entity_id']] = $row['prices'];
+            return $result;
+        }, []);
+    }
+
     /**
      * @param Mage_Eav_Model_Entity_Attribute_Abstract $attribute
      * @param int $storeId
