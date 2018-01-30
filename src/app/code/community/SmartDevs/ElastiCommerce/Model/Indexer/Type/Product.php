@@ -77,11 +77,13 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      */
     protected function createIndexDocuments()
     {
-        $rawData = $this->getResourceModel()->getDefaultProductAttributeValues($this->getWebsiteId());
+        $rawData = $this->getResourceModel()->getDefaultProductAttributeValues($this->getWebsiteId(), $this->getStoreId());
         foreach ($rawData as $id => $rawData) {
             $document = $this->createNewDocument((int)$id);
-            $document->addResultData($rawData);
-
+            $document->addResultData(array_diff_key($rawData, ['stock_status' => true, 'stock_qty' => true]));
+            $document->setStock((bool)$rawData['stock_status'], (float)$rawData['stock_qty']);
+            $document->setVisibility((int)$rawData['visibility']);
+            $document->setStatus((int)$rawData['status']);
             $this->getBulkCollection()->addItem($document);
         }
         return $this;
@@ -110,6 +112,9 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      */
     protected function addAttributeDataToDocuments(Mage_Eav_Model_Entity_Attribute $attribute)
     {
+        if (in_array($attribute->getAttributeCode(), ['visibility', 'status', 'price'])) {
+            return;
+        }
         $attributeRawData = $this->getResourceModel()->getAttributeValues($attribute, $this->getStoreId());
         if ($attribute->getFrontend()->getInputType() === 'multiselect') {
             $attributeOptions = $this->getAttributeOptions($attribute);
@@ -176,19 +181,6 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             $document->setAnchors(array_map('intval', array_values(array_filter(explode(';', $data['anchors'])))));
         }
         return $this;
-    }
-
-    /**
-     * add product stock data
-     */
-    protected function addStockData()
-    {
-        $result = $this->getResourceModel()->getProductStockStatus($this->getWebsiteId());
-        foreach ($result as $id => $data) {
-            $document = $this->getDocument($this->getDocumentId($id));
-            $document->addResultData($data);
-            $document->setStock((bool)$data['stock_status'], (float)$data['qty']);
-        }
     }
 
     /**
@@ -262,8 +254,6 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             }
             Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Added all attribute data to chunk in %.4f seconds', microtime(true) - $timeStart));
             $this->addCategoryRelationData();
-            //add stock information to chunk
-            $this->addStockData();
             //add stock information to chunk
             $this->addPriceData();
             $timeStart = microtime(true);
