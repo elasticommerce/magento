@@ -64,6 +64,7 @@ class SmartDevs_ElastiCommerce_Block_Adminhtml_Catalog_Product_Attribute_Edit_Ta
             'class' => 'required-entry',
             'values' => Mage::getModel('adminhtml/system_config_source_yesno')->toOptionArray(),
             'name' => 'is_used_for_boosted_search',
+            'values' => Mage::getSingleton('adminhtml/system_config_source_yesno')->toOptionArray(),
             'after_element_html' => sprintf('<p class="nm"><small>%s</small></p>',
                 Mage::helper('elasticommerce')->__('Values of this field should be boosted in search results')
             )
@@ -73,6 +74,7 @@ class SmartDevs_ElastiCommerce_Block_Adminhtml_Catalog_Product_Attribute_Edit_Ta
             'class' => 'required-entry',
             'values' => Mage::getModel('adminhtml/system_config_source_yesno')->toOptionArray(),
             'name' => 'is_used_for_completion',
+            'values' => Mage::getSingleton('adminhtml/system_config_source_yesno')->toOptionArray(),
             'after_element_html' => sprintf('<p class="nm"><small>%s</small></p>',
                 Mage::helper('elasticommerce')->__('Values of this field contains terms that might be suggested as an alternative spelling when a user makes a typo.')
             )

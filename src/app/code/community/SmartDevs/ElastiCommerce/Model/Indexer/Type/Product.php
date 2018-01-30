@@ -129,7 +129,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
                 continue;
             }
             //add attribute to sort
-            if (true === boolval($attribute->getUsedForSortBy())) {
+            if (true === boolval($attribute->getUsedForSortBy()) && $attribute->getAttributeCode() !== 'price') {
                 $document->addSortString($attribute->getSortColumnField(), $values[$attribute->getSortColumnField()], $attribute->getSortFieldType());
             }
             // add filterable attribute data
@@ -163,7 +163,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      *
      * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      */
-    protected function addCategoryRelations()
+    protected function addCategoryRelationData()
     {
         $result = $this->getResourceModel()->getProductToCategoryRelations($this->getStoreId());
         foreach ($result as $id => $data) {
@@ -176,6 +176,35 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             $document->setAnchors(array_map('intval', array_values(array_filter(explode(';', $data['anchors'])))));
         }
         return $this;
+    }
+
+    /**
+     * add product stock data
+     */
+    protected function addStockData()
+    {
+        $result = $this->getResourceModel()->getProductStockStatus($this->getWebsiteId());
+        foreach ($result as $id => $data) {
+            $document = $this->getDocument($this->getDocumentId($id));
+            $document->addResultData($data);
+            $document->setStock((bool)$data['stock_status'], (float)$data['qty']);
+        }
+    }
+
+    /**
+     * add price data to object
+     */
+    protected function addPriceData()
+    {
+        $result = $this->getResourceModel()->getProductPrices($this->getWebsiteId());
+        foreach ($result as $id => $data) {
+            $document = $this->getDocument($this->getDocumentId($id));
+            foreach (explode('|', $data) as $value) {
+                list($customerGroupId, $price) = explode(';', $value);
+                $document->addPrice('final_price_customer_group_' . $customerGroupId, (float)$price);
+                $document->addSortNumeric('final_price_customer_group_' . $customerGroupId, (float)$price);
+            }
+        }
     }
 
     /**
@@ -227,11 +256,16 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             $this->createIndexDocuments($chunk);
             Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Prepared chunk Documents in %.4f seconds', microtime(true) - $timeStart));
             $timeStart = microtime(true);
+            //add all attribute data to chunk
             foreach ($this->getEntityAttributes() as $attribute) {
                 $this->addAttributeDataToDocuments($attribute);
             }
             Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Added all attribute data to chunk in %.4f seconds', microtime(true) - $timeStart));
-            $this->addCategoryRelations();
+            $this->addCategoryRelationData();
+            //add stock information to chunk
+            $this->addStockData();
+            //add stock information to chunk
+            $this->addPriceData();
             $timeStart = microtime(true);
             $this->getIndexerClient()->sendBulk();
             Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Added chunk data in  %.4f seconds', microtime(true) - $timeStart));
@@ -246,11 +280,11 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      */
     protected function getAttributeRenderType(Mage_Eav_Model_Entity_Attribute $attribute)
     {
-        $_helper = Mage::helper('elasticommercefilter');
+        #$_helper = Mage::helper('elasticommercefilter');
         $renderer = '';
-        if($_helper instanceof SmartDevs_ElastiCommerceFilter_Helper_Data) {
-            $renderer = $_helper->getRenderer($attribute->getFilterRenderer());
-        }
+        #if ($_helper instanceof SmartDevs_ElastiCommerceFilter_Helper_Data) {
+        #    $renderer = $_helper->getRenderer($attribute->getFilterRenderer());
+        #}
         return $renderer;
     }
 }
