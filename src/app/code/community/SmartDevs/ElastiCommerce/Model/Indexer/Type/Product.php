@@ -81,9 +81,9 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
         foreach ($rawData as $id => $rawData) {
             $document = $this->createNewDocument((int)$id);
             $document->addResultData(array_diff_key($rawData, ['stock_status' => true, 'stock_qty' => true]));
-            $document->setStock((bool)$rawData['stock_status'], (float)$rawData['stock_qty']);
-            $document->setVisibility((int)$rawData['visibility']);
-            $document->setStatus((int)$rawData['status']);
+            #$document->setStock((bool)$rawData['stock_status'], (float)$rawData['stock_qty']);
+            #$document->setVisibility((int)$rawData['visibility']);
+            #$document->setStatus((int)$rawData['status']);
             $this->getBulkCollection()->addItem($document);
         }
         return $this;
@@ -183,6 +183,21 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
         return $this;
     }
 
+    protected function addProductVariationData()
+    {
+        $result = $this->getResourceModel()->getProductVariants($this->getStoreId());
+        foreach ($result as $product) {
+            $variant = ['id' => (int)$product['variant_id'], 'sku' => $product['sku']];
+            $document = $this->getDocument($this->getDocumentId($product['entity_id']));
+            foreach (explode('|', $product['variation']) as $variation) {
+                list($attribute, $value) = explode(':', $variation);
+                $document->addFilterNumeric($attribute, array($value));
+                $variant[$attribute] = $value;
+            }
+            $document->addVariant($variant);
+        }
+    }
+
     /**
      * add price data to object
      */
@@ -254,6 +269,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             }
             Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Added all attribute data to chunk in %.4f seconds', microtime(true) - $timeStart));
             $this->addCategoryRelationData();
+            $this->addProductVariationData();
             //add stock information to chunk
             $this->addPriceData();
             $timeStart = microtime(true);

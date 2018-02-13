@@ -80,10 +80,16 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
         /** @var Mage_Catalog_Model_Resource_Product_Collection $collection */
         $collection = Mage::getModel('catalog/product')->getCollection();
         $collection->addWebsiteFilter($websiteId);
-        #$collection->addAttributeToFilter('status', Mage_Catalog_Model_Product_Status::STATUS_ENABLED);
-        #$collection->addAttributeToFilter('visibility', array('eq' => Mage_Catalog_Model_Product_Visibility::VISIBILITY_BOTH));
+        $collection->addAttributeToFilter('status', Mage_Catalog_Model_Product_Status::STATUS_ENABLED);
+        $collection->getSelect()->joinLeft(['cpsl' => $this->getTable('catalog/product_super_link')], 'e.entity_id = cpsl.product_id');
+        $collection->getSelect()->joinInner(['cp_stst' => $this->getTable('cataloginventory/stock_status')],
+            sprintf('e.entity_id = cp_stst.product_id AND cp_stst.website_id = %u AND cp_stst.stock_id = 1 AND cp_stst.stock_status = %u', $websiteId, Mage_CatalogInventory_Model_Stock::STOCK_IN_STOCK),
+            null
+        );
+        #$collection->addAttributeToFilter('visibility', array('nin' => array(Mage_Catalog_Model_Product_Visibility::VISIBILITY_NOT_VISIBLE)));
         $collection->getSelect()->reset(Varien_Db_Select::COLUMNS);
         $collection->getSelect()->columns(array('e.entity_id'));
+        $collection->getSelect()->where('cpsl.product_id IS NULL');
         if (true === isset($productIds['from']) && true === isset($productIds['to'])) {
             $collection->getSelect()->where('e.entity_id >= ? ', (int)$productIds['from']);
             $collection->getSelect()->where('e.entity_id <= ? ', (int)$productIds['to']);
@@ -132,33 +138,33 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
                 ]
             ]
         );
-        $select->columns(
-            [
-                'status' => new Zend_Db_Expr('COALESCE(at_status_store.value, at_status_default.value)'),
-                'visibility' => new Zend_Db_Expr('COALESCE(at_visibility_store.value, at_visibility_default.value)')
-
-            ]);
+        #$select->columns(
+        #    [
+        #        'status' => new Zend_Db_Expr('COALESCE(at_status_store.value, at_status_default.value)'),
+        #        'visibility' => new Zend_Db_Expr('COALESCE(at_visibility_store.value, at_visibility_default.value)')
+        #
+        #    ]);
         $select->joinInner(['status' => $this->getStatusFilterTableName()], 'e.entity_id = status.entity_id', null);
-        $select->joinInner(['at_status_default' => $statusAttribute->getBackendTable()],
-            sprintf('(`at_status_default`.`entity_id` = `e`.`entity_id`) AND (`at_status_default`.`attribute_id` = %u) AND `at_status_default`.`store_id` = 0', $statusAttribute->getId()),
-            null
-        );
-        $select->joinLeft(['at_status_store' => $statusAttribute->getBackendTable()],
-            sprintf('(`at_status_store`.`entity_id` = `e`.`entity_id`) AND (`at_status_store`.`attribute_id` = %u) AND `at_status_store`.`store_id` = %u', $statusAttribute->getId(), $storeId),
-            null
-        );
-        $select->joinInner(['at_visibility_default' => $statusAttribute->getBackendTable()],
-            sprintf('(`at_visibility_default`.`entity_id` = `e`.`entity_id`) AND (`at_visibility_default`.`attribute_id` = %u) AND `at_visibility_default`.`store_id` = 0', $visibilityAttribute->getId()),
-            null
-        );
-        $select->joinLeft(['at_visibility_store' => $statusAttribute->getBackendTable()],
-            sprintf('(`at_visibility_store`.`entity_id` = `e`.`entity_id`) AND (`at_visibility_store`.`attribute_id` = %u) AND `at_visibility_store`.`store_id` =  %u', $visibilityAttribute->getId(), $storeId),
-            null
-        );
-        $select->joinInner(['cp_stst' => $this->getTable('cataloginventory/stock_status')],
-            sprintf('e.entity_id = cp_stst.product_id AND cp_stst.website_id = %u AND cp_stst.stock_id = 1', $websiteId),
-            ['stock_qty' => 'qty', 'stock_status']
-        );
+        #$select->joinInner(['at_status_default' => $statusAttribute->getBackendTable()],
+        #    sprintf('(`at_status_default`.`entity_id` = `e`.`entity_id`) AND (`at_status_default`.`attribute_id` = %u) AND `at_status_default`.`store_id` = 0', $statusAttribute->getId()),
+        #    null
+        #);
+        #$select->joinLeft(['at_status_store' => $statusAttribute->getBackendTable()],
+        #    sprintf('(`at_status_store`.`entity_id` = `e`.`entity_id`) AND (`at_status_store`.`attribute_id` = %u) AND `at_status_store`.`store_id` = %u', $statusAttribute->getId(), $storeId),
+        #    null
+        #);
+        #$select->joinInner(['at_visibility_default' => $statusAttribute->getBackendTable()],
+        #    sprintf('(`at_visibility_default`.`entity_id` = `e`.`entity_id`) AND (`at_visibility_default`.`attribute_id` = %u) AND `at_visibility_default`.`store_id` = 0', $visibilityAttribute->getId()),
+        #    null
+        #);
+        #$select->joinLeft(['at_visibility_store' => $statusAttribute->getBackendTable()],
+        #    sprintf('(`at_visibility_store`.`entity_id` = `e`.`entity_id`) AND (`at_visibility_store`.`attribute_id` = %u) AND `at_visibility_store`.`store_id` =  %u', $visibilityAttribute->getId(), $storeId),
+        #    null
+        #);
+        #$select->joinInner(['cp_stst' => $this->getTable('cataloginventory/stock_status')],
+        #    sprintf('e.entity_id = cp_stst.product_id AND cp_stst.website_id = %u AND cp_stst.stock_id = 1', $websiteId),
+        #    ['stock_qty' => 'qty', 'stock_status']
+        #);
         $select->order(new Zend_Db_Expr('NULL')); //ORDER BY NULL to avoid unnecessary sorting
         return array_reduce($this->_getWriteAdapter()->query($select)->fetchAll(), function ($result, $row) {
             $result[$row['entity_id']] = $row;
@@ -169,9 +175,8 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
     /**
      * receive product to category relation information
      *
-     * @param int $websiteId
      * @param int $storeId
-     * @param array $productIds
+     * @return array
      */
     public function getProductToCategoryRelations($storeId)
     {
@@ -209,8 +214,51 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
     }
 
     /**
+     * get product variants
+     *
+     * @param $storeId
+     * @return array
+     */
+    public function getProductVariants($storeId)
+    {
+        $this->_getWriteAdapter()->query('SET SESSION group_concat_max_len = 10486808576;');
+        /** @var Varien_Db_Select $select */
+        $select = $this->getSelect();
+        $select->from(['e' => $this->getStatusFilterTableName()], ['entity_id'])
+            ->join(
+                ['cpsl' => $this->getTable('catalog/product_super_link')],
+                'e.entity_id = cpsl.parent_id',
+                [
+                    'variant_id' => 'product_id',
+                ]
+            )
+            ->join(['cpsua' => $this->getTable('catalog/product_super_attribute')],
+                'e.entity_id = cpsua.product_id',
+                null
+            )
+            ->join(['cpe' => $this->getTable('catalog/product')],
+                'cpsl.product_id = cpe.entity_id',
+                ['sku']
+            )
+            ->join(['eav' => $this->getTable('eav/attribute')],
+                'eav.attribute_id = cpsua.attribute_id',
+                null
+            )
+            ->join(['cpei' => $this->getTable('catalog/product') . '_int'],
+                'cpsl.product_id = cpei.entity_id AND cpei.attribute_id = cpsua.attribute_id and cpei.store_id = 0',
+                null
+            );
+        $select->columns(['variation' => new Zend_Db_Expr('GROUP_CONCAT( DISTINCT CONCAT(eav.attribute_code, \':\', cpei.value) ORDER BY cpsua.position SEPARATOR "|")')]);
+        $select->group(['e.entity_id', 'cpsl.product_id']);
+        // ORDER BY NULL to avoid second sorting run with filesort on disc
+        // sorting is already done within group by
+        $select->order(new Zend_Db_Expr('NULL'));
+        return $this->_getWriteAdapter()->query($select)->fetchAll();
+    }
+
+    /**
      * @param $websiteId
-     * @return []
+     * @return array
      */
     public function getProductStockStatus($websiteId)
     {
@@ -230,7 +278,7 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
 
     /**
      * @param $websiteId
-     * @return []
+     * @return array
      */
     public function getProductPrices($websiteId)
     {

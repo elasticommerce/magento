@@ -56,6 +56,32 @@
                 </elasticommerce>
             </types>
         </cache>
+        <events>
+            <catalog_category_delete_commit_after>
+                <observers>
+                    <elasticsearch>
+                        <class>elasticommerce/observer</class>
+                        <method>onCategoryDeleteCommitAfter</method>
+                    </elasticsearch>
+                </observers>
+            </catalog_category_delete_commit_after>
+            <cms_page_save_commit_after>
+                <observers>
+                    <elasticsearch>
+                        <class>elasticommerce/observer</class>
+                        <method>onCmsPageSaveCommitAfter</method>
+                    </elasticsearch>
+                </observers>
+            </cms_page_save_commit_after>
+            <cms_page_delete_commit_after>
+                <observers>
+                    <elasticsearch>
+                        <class>elasticommerce/observer</class>
+                        <method>onCmsPageDeleteCommitAfter</method>
+                    </elasticsearch>
+                </observers>
+            </cms_page_delete_commit_after>
+        </events>
     </global>
     <adminhtml>
         <layout>
