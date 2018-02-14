@@ -44,6 +44,10 @@
                 </catalogsearch_fulltext>
                 <elasticommerce>
                     <model>elasticommerce/indexer_process</model>
+                    <depends>
+                        <cataloginventory_stock/>
+                        <catalog_product_price/>
+                    </depends>
                 </elasticommerce>
             </indexer>
         </index>
