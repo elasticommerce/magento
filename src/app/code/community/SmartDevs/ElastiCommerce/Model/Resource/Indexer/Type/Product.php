@@ -118,7 +118,7 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
      * @param int $storeId
      * @return mixed
      */
-    public function getDefaultProductAttributeValues()
+    public function getDefaultProductAttributeValues($websiteId)
     {
         /** @var Varien_Db_Select $select */
         $select = $this->getSelect();
@@ -148,6 +148,10 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
         );
         $select->joinInner(['status' => $this->getStatusFilterTableName()], 'e.entity_id = status.entity_id',
             ['stock_status', 'visibility']);
+        $select->join(['cpp' => $this->getTable('catalog/product_index_price')],
+            sprintf('e.entity_id = cpp.entity_id AND cpp.customer_group_id >= 0 AND cpp.website_id = %u', $websiteId),
+            ['price', 'final_price', 'min_price', 'max_price', 'tier_price', 'group_price']
+        );
         $select->order(new Zend_Db_Expr('NULL')); //ORDER BY NULL to avoid unnecessary sorting
         return array_reduce($this->_getWriteAdapter()->query($select)->fetchAll(), function ($result, $row) {
             $result[$row['entity_id']] = $row;
@@ -263,19 +267,18 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
      * @param $websiteId
      * @return array
      */
-    public function getProductPrices($websiteId)
+    public function getProductPrices($websiteId, $customerGroupId = 0)
     {
         $select = $this->getSelect();
         $select->from(['e' => $this->getStatusFilterTableName()], ['entity_id'])
             ->join(['cpp' => $this->getTable('catalog/product_index_price')],
                 sprintf('e.entity_id = cpp.entity_id AND cpp.customer_group_id >= 0 AND cpp.website_id = %u', $websiteId),
-                ['prices' => new Zend_Db_Expr("GROUP_CONCAT(CONCAT(cpp.customer_group_id, ';', cpp.final_price) SEPARATOR '|')")]
+                ['price', 'final_price', 'min_price', 'max_price', 'tier_price', 'group_price']
             );
-        $select->group('e.entity_id');
         $select->order(new Zend_Db_Expr('NULL'));
 
         return array_reduce($this->_getWriteAdapter()->query($select)->fetchAll(), function ($result, $row) {
-            $result[$row['entity_id']] = $row['prices'];
+            $result[$row['entity_id']] = array_diff_key($row, ['entity_id' => true]);
             return $result;
         }, []);
     }

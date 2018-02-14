@@ -87,12 +87,17 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      */
     protected function createIndexDocuments()
     {
-        $rawData = $this->getResourceModel()->getDefaultProductAttributeValues();
+        $rawData = $this->getResourceModel()->getDefaultProductAttributeValues($this->getWebsiteId());
         foreach ($rawData as $id => $rawData) {
             $document = $this->createNewDocument((int)$id);
-            $document->addResultData(array_diff_key($rawData, ['stock_status' => true]));
+            $document->addResultData(array_filter($rawData, function ($key) {
+                return false === in_array($key, ['stock_status', 'price', 'final_price', 'min_price', 'max_price', 'tier_price', 'group_price']);
+            }, ARRAY_FILTER_USE_KEY));
             $document->setVisibility((int)$rawData['visibility']);
             $document->setStockStatus((int)$rawData['stock_status']);
+            $document->addPrice(array_map('floatval', array_filter($rawData, function ($value, $key) {
+                return false !== strpos($key, 'price') && null !== $value;
+            }, ARRAY_FILTER_USE_BOTH)));
             $this->getBulkCollection()->addItem($document);
         }
         return $this;
@@ -200,22 +205,6 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
     }
 
     /**
-     * add price data to object
-     */
-    protected function addPriceData()
-    {
-        $result = $this->getResourceModel()->getProductPrices($this->getWebsiteId());
-        foreach ($result as $id => $data) {
-            $document = $this->getDocument($this->getDocumentId($id));
-            foreach (explode('|', $data) as $value) {
-                list($customerGroupId, $price) = explode(';', $value);
-                $document->addPrice('final_price_customer_group_' . $customerGroupId, (float)$price);
-                $document->addSortNumeric('final_price_customer_group_' . $customerGroupId, (float)$price);
-            }
-        }
-    }
-
-    /**
      * extend the default mapping for different actions
      *
      * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
@@ -272,9 +261,10 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             $this->addCategoryRelationData();
             $this->addProductVariationData();
             //add stock information to chunk
-            $this->addPriceData();
+            //$this->addPriceData();
             $timeStart = microtime(true);
             $this->getIndexerClient()->sendBulk();
+            $this->getIndexerClient()->getBulk()->clear();
             Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Added chunk data in  %.4f seconds', microtime(true) - $timeStart));
         }
         Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Reindexed Store %u in  %.4f seconds', $this->getStoreId(), microtime(true) - $storeTimeStart));
