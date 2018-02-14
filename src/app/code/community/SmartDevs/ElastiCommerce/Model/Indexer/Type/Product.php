@@ -87,13 +87,12 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      */
     protected function createIndexDocuments()
     {
-        $rawData = $this->getResourceModel()->getDefaultProductAttributeValues($this->getWebsiteId(), $this->getStoreId());
+        $rawData = $this->getResourceModel()->getDefaultProductAttributeValues();
         foreach ($rawData as $id => $rawData) {
             $document = $this->createNewDocument((int)$id);
-            $document->addResultData(array_diff_key($rawData, ['stock_status' => true, 'stock_qty' => true]));
-            #$document->setStock((bool)$rawData['stock_status'], (float)$rawData['stock_qty']);
-            #$document->setVisibility((int)$rawData['visibility']);
-            #$document->setStatus((int)$rawData['status']);
+            $document->addResultData(array_diff_key($rawData, ['stock_status' => true]));
+            $document->setVisibility((int)$rawData['visibility']);
+            $document->setStockStatus((int)$rawData['stock_status']);
             $this->getBulkCollection()->addItem($document);
         }
         return $this;
@@ -135,14 +134,6 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             /** @var SmartDevs_ElastiCommerce_IndexDocument $document */
             $document = $this->getDocument($this->getDocumentId($id));
             $document->addResultData($values);
-            if ($attribute->getAttributeCode() === 'visibility') {
-                $document->setVisibility((int)$values[$attribute->getAttributeCode()]);
-                continue;
-            }
-            if ($attribute->getAttributeCode() === 'status') {
-                $document->setStatus((int)$values[$attribute->getAttributeCode()]);
-                continue;
-            }
             //add attribute to sort
             if (true === boolval($attribute->getUsedForSortBy()) && $attribute->getAttributeCode() !== 'price') {
                 $document->addSortString($attribute->getSortColumnField(), $values[$attribute->getSortColumnField()], $attribute->getSortFieldType());

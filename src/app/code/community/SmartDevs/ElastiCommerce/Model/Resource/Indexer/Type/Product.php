@@ -76,6 +76,15 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
             'nullable' => false,
             'primary' => true,
         ), 'Entity ID');
+        $table->addColumn('stock_status', Varien_Db_Ddl_Table::TYPE_INTEGER, null, array(
+            'unsigned' => true,
+            'default' => 1,
+            'primary' => false,
+        ), 'Stock Status');
+        $table->addColumn('visibility', Varien_Db_Ddl_Table::TYPE_INTEGER, null, array(
+            'unsigned' => true,
+            'nullable' => false,
+        ), 'product visibility');
         $this->_getWriteAdapter()->createTable($table);
         /** @var Mage_Catalog_Model_Resource_Product_Collection $collection */
         $collection = Mage::getModel('catalog/product')->getCollection();
@@ -86,17 +95,18 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
             sprintf('e.entity_id = cp_stst.product_id AND cp_stst.website_id = %u AND cp_stst.stock_id = 1 AND cp_stst.stock_status = %u', $websiteId, Mage_CatalogInventory_Model_Stock::STOCK_IN_STOCK),
             null
         );
-        #$collection->addAttributeToFilter('visibility', array('nin' => array(Mage_Catalog_Model_Product_Visibility::VISIBILITY_NOT_VISIBLE)));
+        $collection->addAttributeToFilter('visibility', array('nin' => array(Mage_Catalog_Model_Product_Visibility::VISIBILITY_NOT_VISIBLE)));
         $collection->getSelect()->reset(Varien_Db_Select::COLUMNS);
-        $collection->getSelect()->columns(array('e.entity_id'));
+        $collection->getSelect()->columns(array('e.entity_id', 'cp_stst.stock_status', 'at_visibility.value'));
         $collection->getSelect()->where('cpsl.product_id IS NULL');
+
         if (true === isset($productIds['from']) && true === isset($productIds['to'])) {
             $collection->getSelect()->where('e.entity_id >= ? ', (int)$productIds['from']);
             $collection->getSelect()->where('e.entity_id <= ? ', (int)$productIds['to']);
         } else if (true === is_array($productIds)) {
             $collection->getSelect()->where('e.entity_id IN (?)', array_map('intval', $productIds['in']));
         }
-        $insertQuery = $this->_getWriteAdapter()->insertFromSelect($collection->getSelect(), $this->getStatusFilterTableName(), array('entity_id'));
+        $insertQuery = $this->_getWriteAdapter()->insertFromSelect($collection->getSelect(), $this->getStatusFilterTableName(), ['entity_id', 'stock_status', 'visibility']);
         $this->_getWriteAdapter()->query($insertQuery);
         return $this;
     }
@@ -108,10 +118,8 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
      * @param int $storeId
      * @return mixed
      */
-    public function getDefaultProductAttributeValues($websiteId, $storeId)
+    public function getDefaultProductAttributeValues()
     {
-        $statusAttribute = Mage::getSingleton("eav/config")->getAttribute(Mage_Catalog_Model_Product::ENTITY, 'status');
-        $visibilityAttribute = Mage::getSingleton("eav/config")->getAttribute(Mage_Catalog_Model_Product::ENTITY, 'visibility');
         /** @var Varien_Db_Select $select */
         $select = $this->getSelect();
         // SELECT SQL_NO_CACHE
@@ -138,33 +146,8 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
                 ]
             ]
         );
-        #$select->columns(
-        #    [
-        #        'status' => new Zend_Db_Expr('COALESCE(at_status_store.value, at_status_default.value)'),
-        #        'visibility' => new Zend_Db_Expr('COALESCE(at_visibility_store.value, at_visibility_default.value)')
-        #
-        #    ]);
-        $select->joinInner(['status' => $this->getStatusFilterTableName()], 'e.entity_id = status.entity_id', null);
-        #$select->joinInner(['at_status_default' => $statusAttribute->getBackendTable()],
-        #    sprintf('(`at_status_default`.`entity_id` = `e`.`entity_id`) AND (`at_status_default`.`attribute_id` = %u) AND `at_status_default`.`store_id` = 0', $statusAttribute->getId()),
-        #    null
-        #);
-        #$select->joinLeft(['at_status_store' => $statusAttribute->getBackendTable()],
-        #    sprintf('(`at_status_store`.`entity_id` = `e`.`entity_id`) AND (`at_status_store`.`attribute_id` = %u) AND `at_status_store`.`store_id` = %u', $statusAttribute->getId(), $storeId),
-        #    null
-        #);
-        #$select->joinInner(['at_visibility_default' => $statusAttribute->getBackendTable()],
-        #    sprintf('(`at_visibility_default`.`entity_id` = `e`.`entity_id`) AND (`at_visibility_default`.`attribute_id` = %u) AND `at_visibility_default`.`store_id` = 0', $visibilityAttribute->getId()),
-        #    null
-        #);
-        #$select->joinLeft(['at_visibility_store' => $statusAttribute->getBackendTable()],
-        #    sprintf('(`at_visibility_store`.`entity_id` = `e`.`entity_id`) AND (`at_visibility_store`.`attribute_id` = %u) AND `at_visibility_store`.`store_id` =  %u', $visibilityAttribute->getId(), $storeId),
-        #    null
-        #);
-        #$select->joinInner(['cp_stst' => $this->getTable('cataloginventory/stock_status')],
-        #    sprintf('e.entity_id = cp_stst.product_id AND cp_stst.website_id = %u AND cp_stst.stock_id = 1', $websiteId),
-        #    ['stock_qty' => 'qty', 'stock_status']
-        #);
+        $select->joinInner(['status' => $this->getStatusFilterTableName()], 'e.entity_id = status.entity_id',
+            ['stock_status', 'visibility']);
         $select->order(new Zend_Db_Expr('NULL')); //ORDER BY NULL to avoid unnecessary sorting
         return array_reduce($this->_getWriteAdapter()->query($select)->fetchAll(), function ($result, $row) {
             $result[$row['entity_id']] = $row;
