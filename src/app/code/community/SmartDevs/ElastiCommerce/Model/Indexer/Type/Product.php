@@ -29,9 +29,19 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
         return Mage_Catalog_Model_Product::ENTITY;
     }
 
+    /**
+     * get configurated chunk size
+     *
+     * @return int
+     */
     protected function getChunkSize()
     {
-        return intval(Mage::getStoreConfig('elasticommerce/index/chunk_size', $this->getStoreId()));
+        return intval(Mage::app()->getWebsite($this->getWebsiteId())->getConfig('elasticommerce/index/chunk_size'));
+    }
+
+    protected function getStoreLanguage()
+    {
+        substr(Mage::getStoreConfig('general/locale/code', $this->getStoreId()), 0, 2);
     }
 
     /**
