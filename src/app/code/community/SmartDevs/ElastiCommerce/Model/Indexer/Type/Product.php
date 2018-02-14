@@ -68,7 +68,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
     }
 
     /**
-     * prepare product prefilter table for faster indexing speed
+     * prepare product pre filter table for faster indexing speed
      *
      * @param array $productIds
      * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
