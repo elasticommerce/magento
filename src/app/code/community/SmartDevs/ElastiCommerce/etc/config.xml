@@ -7,7 +7,7 @@
 <config>
     <modules>
         <SmartDevs_ElastiCommerce>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
         </SmartDevs_ElastiCommerce>
     </modules>
     <global>

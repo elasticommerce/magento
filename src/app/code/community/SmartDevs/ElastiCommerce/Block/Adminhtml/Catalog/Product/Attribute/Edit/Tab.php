@@ -57,6 +57,7 @@ class SmartDevs_ElastiCommerce_Block_Adminhtml_Catalog_Product_Attribute_Edit_Ta
     {
         /* @var $form Varien_Data_Form */
         $form = new Varien_Data_Form();
+        $attribute = Mage::registry('entity_attribute');
         $fieldset = $form->addFieldset('elasticommerce', array('legend' => Mage::helper('elasticommerce')->__('Improve search results and user experience with following settings.')));
         // elasticsearch properties fieldset
         $fieldset->addField('is_used_for_boosted_search', 'select', array(
@@ -89,6 +90,16 @@ class SmartDevs_ElastiCommerce_Block_Adminhtml_Catalog_Product_Attribute_Edit_Ta
                     Mage::helper('elasticommerce')->__('Values of this field contains terms that might be suggested as an alternative spelling when a user makes a typo.')
                 )
             ));
+
+            $fieldset->addField('filter_renderer_format', 'text', array(
+                'label' => 'Renderer Format',
+                'value' => $attribute->getData('filter_renderer_format'),
+                'name' => 'filter_renderer_format',
+                'after_element_html' => sprintf('<p class="nm"><small>%s</small></p>',
+                    Mage::helper('elasticommerce')->__('A format string used to format filter values. ')
+                )
+            ));
+
         }
         $this->setForm($form);
         return $this;
