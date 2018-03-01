@@ -260,6 +260,9 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Added all attribute data to chunk in %.4f seconds', microtime(true) - $timeStart));
             $this->addCategoryRelationData();
             $this->addProductVariationData();
+            //add additional Data to product
+            $this->addMostViewed($chunk);
+            $this->addBestseller($chunk);
             //add stock information to chunk
             //$this->addPriceData();
             $timeStart = microtime(true);
@@ -269,6 +272,26 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
         }
         Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Reindexed Store %u in  %.4f seconds', $this->getStoreId(), microtime(true) - $storeTimeStart));
         return $this;
+    }
+
+    public function addMostViewed(array $productIds)
+    {
+        $resultData = $this->getResourceModel()->getProductViewCount($this->getStoreId(), $productIds);
+
+        foreach ($resultData as $id => $value){
+            $document = $this->getDocument($this->getDocumentId($id));
+            $document->addSortNumeric('view_count', $value);
+        }
+    }
+
+    public function addBestseller(array $productIds)
+    {
+        $resultData = $this->getResourceModel()->getProductBestsellerCount($this->getStoreId(), $productIds);
+
+        foreach ($resultData as $id => $value){
+            $document = $this->getDocument($this->getDocumentId($id));
+            $document->addSortNumeric('sold_qty', $value);
+        }
     }
 
     /**

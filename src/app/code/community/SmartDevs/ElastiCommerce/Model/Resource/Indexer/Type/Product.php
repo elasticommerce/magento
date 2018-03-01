@@ -400,4 +400,81 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
             return $result;
         }, []);
     }
+
+    /**
+     * @param $storeId
+     * @return array
+     */
+    public function getProductViewCount($storeId, $productIds, $period = 30)
+    {
+        /** @var SmartDevs_ElastiCommerce_Helper_Data $_helper */
+        $_helper = Mage::helper('elasticommerce');
+
+        $select = $this->getSelect();
+        $select->from(
+            ['viewed_item' => Mage::getSingleton('core/resource')->getTableName('reports/viewed_product_index')],
+            ['product_id', 'COUNT(*) AS count', 'store_id']
+        );
+        $select->where($_helper->createPeriodCondition('viewed_item.added_at', $period));
+        //$select->where($_helper->createStoreCondition('viewed_item.store_id', $storeId));
+        $select->group('product_id');
+        $select->group('store_id');
+
+        if (true === isset($productIds['from']) && true === isset($productIds['to'])) {
+            $select->where('viewed_item.product_id >= ? ', (int)$productIds['from']);
+            $select->where('viewed_item.product_id <= ? ', (int)$productIds['to']);
+        } else if (true === is_array($productIds)) {
+            $select->where('viewed_item.product_id IN (?)', array_map('intval', $productIds['in']));
+        }
+
+        $resultSet = $this->_getWriteAdapter()->query($select)->fetchAll();
+
+        if(count($resultSet) > 0 && $resultSet[0]['product_id'] !== null){
+            return array_reduce($resultSet, function ($result, $row) {
+                $result[$row['product_id']] = intval($row['count']);
+                return $result;
+            }, []);
+        }else{
+            return [];
+        }
+    }
+
+    /**
+     * @param $storeId
+     * @param $productIds
+     * @param $period - Persiod in Days
+     *
+     * @return mixed
+     * @throws Zend_Db_Statement_Exception
+     */
+    public function getProductBestsellerCount($storeId, $productIds, $period = 30)
+    {
+        /** @var SmartDevs_ElastiCommerce_Helper_Data $_helper */
+        $_helper = Mage::helper('elasticommerce');
+
+        $select = $this->getSelect();
+        $select->from(
+            ['order_item' => Mage::getSingleton('core/resource')->getTableName('sales/order_item')],
+            ['product_id', 'SUM(qty_ordered) AS qty']
+        );
+        $select->where($_helper->createPeriodCondition('order_item.created_at', $period));
+        $select->where($_helper->createStoreCondition('order_item.store_id', $storeId));
+
+        if (true === isset($productIds['from']) && true === isset($productIds['to'])) {
+            $select->where('order_item.product_id >= ? ', (int)$productIds['from']);
+            $select->where('order_item.product_id <= ? ', (int)$productIds['to']);
+        } else if (true === is_array($productIds)) {
+            $select->where('order_item.product_id IN (?)', array_map('intval', $productIds['in']));
+        }
+        $resultSet = $this->_getWriteAdapter()->query($select)->fetchAll();
+
+        if(count($resultSet) > 0 && $resultSet[0]['product_id'] !== null){
+            return array_reduce($resultSet, function ($result, $row) {
+                $result[$row['product_id']] = intval($row['qty']);
+                return $result;
+            }, []);
+        }else{
+            return [];
+        }
+    }
 }
