@@ -261,7 +261,11 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             $this->addCategoryRelationData();
             $this->addProductVariationData();
             //add additional Data to product
-            $this->addMostViewed($chunk);
+            try {
+                $this->addMostViewed($chunk);
+            } catch (\Error $e) {
+                Mage::logException(new \Exception($e->getMessage()));
+            }
             $this->addBestseller($chunk);
             //add stock information to chunk
             //$this->addPriceData();
