@@ -426,7 +426,6 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
         } else if (true === is_array($productIds)) {
             $select->where('viewed_item.product_id IN (?)', array_map('intval', $productIds['in']));
         }
-
         $resultSet = $this->_getWriteAdapter()->query($select)->fetchAll();
 
         if(count($resultSet) > 0 && $resultSet[0]['product_id'] !== null){
@@ -458,7 +457,7 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
             ['product_id', 'SUM(qty_ordered) AS qty']
         );
         $select->where($_helper->createPeriodCondition('order_item.created_at', $period));
-        $select->where($_helper->createStoreCondition('order_item.store_id', $storeId));
+        #$select->where($_helper->createStoreCondition('order_item.store_id', $storeId));
 
         if (true === isset($productIds['from']) && true === isset($productIds['to'])) {
             $select->where('order_item.product_id >= ? ', (int)$productIds['from']);
@@ -466,6 +465,9 @@ class SmartDevs_ElastiCommerce_Model_Resource_Indexer_Type_Product extends Smart
         } else if (true === is_array($productIds)) {
             $select->where('order_item.product_id IN (?)', array_map('intval', $productIds['in']));
         }
+
+        $select->group('order_item.product_id');
+
         $resultSet = $this->_getWriteAdapter()->query($select)->fetchAll();
 
         if(count($resultSet) > 0 && $resultSet[0]['product_id'] !== null){
