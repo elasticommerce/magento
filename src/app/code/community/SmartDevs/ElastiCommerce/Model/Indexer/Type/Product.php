@@ -266,7 +266,11 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             } catch (\Error $e) {
                 Mage::logException(new \Exception($e->getMessage()));
             }
-            $this->addBestseller($chunk);
+            try {
+                $this->addBestseller($chunk);
+            }catch (\Error $e) {
+                Mage::logException(new \Exception($e->getMessage()));
+            }
             //add stock information to chunk
             //$this->addPriceData();
             $timeStart = microtime(true);
