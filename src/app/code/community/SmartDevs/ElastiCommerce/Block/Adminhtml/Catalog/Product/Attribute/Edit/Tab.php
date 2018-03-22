@@ -63,6 +63,7 @@ class SmartDevs_ElastiCommerce_Block_Adminhtml_Catalog_Product_Attribute_Edit_Ta
         $fieldset->addField('is_used_for_boosted_search', 'select', array(
             'label' => 'Boosted Search',
             'class' => 'required-entry',
+            'value' => $attribute->getData('is_used_for_boosted_search'),
             'values' => Mage::getModel('adminhtml/system_config_source_yesno')->toOptionArray(),
             'name' => 'is_used_for_boosted_search',
             'values' => Mage::getSingleton('adminhtml/system_config_source_yesno')->toOptionArray(),
@@ -73,6 +74,7 @@ class SmartDevs_ElastiCommerce_Block_Adminhtml_Catalog_Product_Attribute_Edit_Ta
         $fieldset->addField('is_used_for_completion', 'select', array(
             'label' => 'Autocompletion',
             'class' => 'required-entry',
+            'value' => $attribute->getData('is_used_for_completion'),
             'values' => Mage::getModel('adminhtml/system_config_source_yesno')->toOptionArray(),
             'name' => 'is_used_for_completion',
             'values' => Mage::getSingleton('adminhtml/system_config_source_yesno')->toOptionArray(),
@@ -84,6 +86,7 @@ class SmartDevs_ElastiCommerce_Block_Adminhtml_Catalog_Product_Attribute_Edit_Ta
             $fieldset->addField('filter_renderer', 'select', array(
                 'label' => 'Filter Renderer',
                 'class' => 'required-entry',
+                'value' => $attribute->getData('filter_renderer'),
                 'values' => Mage::getModel('elasticommercefilter/system_config_source_renderer')->toOptionArray(),
                 'name' => 'filter_renderer',
                 'after_element_html' => sprintf('<p class="nm"><small>%s</small></p>',
