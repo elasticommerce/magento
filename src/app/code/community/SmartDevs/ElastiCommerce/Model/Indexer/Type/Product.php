@@ -94,6 +94,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
                 return false === in_array($key, ['stock_status', 'price', 'final_price', 'min_price', 'max_price', 'tier_price', 'group_price']);
             }, ARRAY_FILTER_USE_KEY));
             $document->setVisibility((int)$rawData['visibility']);
+            $document->setAttributeSetId((int)$rawData['attribute_set_id']);
             $document->setStockStatus((int)$rawData['stock_status']);
             $document->addPrice(array_map('floatval', array_filter($rawData, function ($value, $key) {
                 return false !== strpos($key, 'price') && null !== $value;
