@@ -103,6 +103,17 @@ class SmartDevs_ElastiCommerce_Block_Adminhtml_Catalog_Product_Attribute_Edit_Ta
                 )
             ));
 
+            $fieldset->addField('is_extended_filter', 'select', array(
+                'label' => 'Extended Filter',
+                'value' => $attribute->getData('is_extended_filter'),
+                'values' => Mage::getModel('adminhtml/system_config_source_yesno')->toOptionArray(),
+                'name' => 'is_extended_filter',
+                'values' => Mage::getSingleton('adminhtml/system_config_source_yesno')->toOptionArray(),
+                'after_element_html' => sprintf('<p class="nm"><small>%s</small></p>',
+                    Mage::helper('elasticommerce')->__('Extended Filters may be handeled differently, ex: hidden by default')
+                )
+            ));
+
         }
         $this->setForm($form);
         return $this;
