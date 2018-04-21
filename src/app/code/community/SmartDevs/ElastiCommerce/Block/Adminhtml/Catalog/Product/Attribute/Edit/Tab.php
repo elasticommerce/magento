@@ -63,6 +63,7 @@ class SmartDevs_ElastiCommerce_Block_Adminhtml_Catalog_Product_Attribute_Edit_Ta
         $fieldset->addField('is_used_for_boosted_search', 'select', array(
             'label' => 'Boosted Search',
             'class' => 'required-entry',
+            'value' => $attribute->getData('is_used_for_boosted_search'),
             'values' => Mage::getModel('adminhtml/system_config_source_yesno')->toOptionArray(),
             'name' => 'is_used_for_boosted_search',
             'values' => Mage::getSingleton('adminhtml/system_config_source_yesno')->toOptionArray(),
@@ -73,6 +74,7 @@ class SmartDevs_ElastiCommerce_Block_Adminhtml_Catalog_Product_Attribute_Edit_Ta
         $fieldset->addField('is_used_for_completion', 'select', array(
             'label' => 'Autocompletion',
             'class' => 'required-entry',
+            'value' => $attribute->getData('is_used_for_completion'),
             'values' => Mage::getModel('adminhtml/system_config_source_yesno')->toOptionArray(),
             'name' => 'is_used_for_completion',
             'values' => Mage::getSingleton('adminhtml/system_config_source_yesno')->toOptionArray(),
@@ -84,6 +86,7 @@ class SmartDevs_ElastiCommerce_Block_Adminhtml_Catalog_Product_Attribute_Edit_Ta
             $fieldset->addField('filter_renderer', 'select', array(
                 'label' => 'Filter Renderer',
                 'class' => 'required-entry',
+                'value' => $attribute->getData('filter_renderer'),
                 'values' => Mage::getModel('elasticommercefilter/system_config_source_renderer')->toOptionArray(),
                 'name' => 'filter_renderer',
                 'after_element_html' => sprintf('<p class="nm"><small>%s</small></p>',
@@ -97,6 +100,17 @@ class SmartDevs_ElastiCommerce_Block_Adminhtml_Catalog_Product_Attribute_Edit_Ta
                 'name' => 'filter_renderer_format',
                 'after_element_html' => sprintf('<p class="nm"><small>%s</small></p>',
                     Mage::helper('elasticommerce')->__('A format string used to format filter values. ')
+                )
+            ));
+
+            $fieldset->addField('is_extended_filter', 'select', array(
+                'label' => 'Extended Filter',
+                'value' => $attribute->getData('is_extended_filter'),
+                'values' => Mage::getModel('adminhtml/system_config_source_yesno')->toOptionArray(),
+                'name' => 'is_extended_filter',
+                'values' => Mage::getSingleton('adminhtml/system_config_source_yesno')->toOptionArray(),
+                'after_element_html' => sprintf('<p class="nm"><small>%s</small></p>',
+                    Mage::helper('elasticommerce')->__('Extended Filters may be handeled differently, ex: hidden by default')
                 )
             ));
 
