@@ -99,6 +99,9 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             $document->addPrice(array_map('floatval', array_filter($rawData, function ($value, $key) {
                 return false !== strpos($key, 'price') && null !== $value;
             }, ARRAY_FILTER_USE_BOTH)));
+
+            $document->addSortDate('created_at', $rawData['created_at']);
+
             $this->getBulkCollection()->addItem($document);
         }
         return $this;
