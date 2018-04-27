@@ -11,7 +11,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
     implements SmartDevs_ElastiCommerce_Model_Indexer_Type_Interface
 {
 
-    protected $_systemAttributes = array('status', 'required_options', 'tax_class_id', 'weight');
+    protected $_systemAttributes = array('status', 'required_options', 'tax_class_id', 'weight', 'created_at');
     /**
      * indexer type string
      *
