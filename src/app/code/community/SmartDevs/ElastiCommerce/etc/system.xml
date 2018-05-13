@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<config>
+    <sections>
+        <elasticommerce translate="label" module="elasticommerce">
+            <groups>
+                <global translate="label">
+                    <label>General</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>1</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <fields>
+                        <filter_groups>
+                            <label>Filter Groups</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>140</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[Groups and their order, separated by ;]]></comment>
+                        </filter_groups>
+                    </fields>
+                </global>
+            </groups>
+        </elasticommerce>
+    </sections>
+</config>

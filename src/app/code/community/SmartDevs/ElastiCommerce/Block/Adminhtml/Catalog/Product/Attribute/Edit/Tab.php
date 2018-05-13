@@ -103,6 +103,24 @@ class SmartDevs_ElastiCommerce_Block_Adminhtml_Catalog_Product_Attribute_Edit_Ta
                 )
             ));
 
+            $fieldset->addField('filter_group', 'text', array(
+                'label' => 'Filter Group',
+                'value' => $attribute->getData('filter_group'),
+                'name' => 'filter_group',
+                'after_element_html' => sprintf('<p class="nm"><small>%s</small></p>',
+                    Mage::helper('elasticommerce')->__('Group for filter displayed in frontend')
+                )
+            ));
+
+            $fieldset->addField('filter_sort', 'text', array(
+                'label' => 'Filter Sort',
+                'value' => $attribute->getData('filter_sort'),
+                'name' => 'filter_sort',
+                'after_element_html' => sprintf('<p class="nm"><small>%s</small></p>',
+                    Mage::helper('elasticommerce')->__('Sort for this filter in frontend')
+                )
+            ));
+
             $fieldset->addField('is_extended_filter', 'select', array(
                 'label' => 'Extended Filter',
                 'value' => $attribute->getData('is_extended_filter'),
