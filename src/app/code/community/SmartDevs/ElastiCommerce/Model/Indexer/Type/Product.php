@@ -105,6 +105,8 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             }
             $document->addSortDate('created_at', $rawData['created_at']);
 
+            $event = [ 'document' => &$document, 'rawData' => &$rawData, 'id' => $id ];
+            Mage::dispatchEvent('elasticommerce_before_add_document', $event);
             $this->getBulkCollection()->addItem($document);
         }
         return $this;
