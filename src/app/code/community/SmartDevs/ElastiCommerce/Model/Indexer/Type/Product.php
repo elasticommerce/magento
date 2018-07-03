@@ -101,7 +101,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             }, ARRAY_FILTER_USE_BOTH)));
 
             if(array_key_exists('final_price', $rawData)) {
-                $document->addSortString('price',$rawData['final_price']);
+                $document->addSortNumeric('price',$rawData['final_price']);
             }
             $document->addSortDate('created_at', $rawData['created_at']);
 
