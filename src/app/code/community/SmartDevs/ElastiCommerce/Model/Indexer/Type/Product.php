@@ -100,6 +100,9 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
                 return false !== strpos($key, 'price') && null !== $value;
             }, ARRAY_FILTER_USE_BOTH)));
 
+            if(array_key_exists('final_price', $rawData)) {
+                $document->addSortString('price',$rawData['final_price']);
+            }
             $document->addSortDate('created_at', $rawData['created_at']);
 
             $this->getBulkCollection()->addItem($document);
@@ -272,7 +275,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             }
             try {
                 $this->addBestseller($chunk);
-            }catch (\Error $e) {
+            } catch (\Error $e) {
                 Mage::logException(new \Exception($e->getMessage()));
             }
             //add stock information to chunk
@@ -290,7 +293,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
     {
         $resultData = $this->getResourceModel()->getProductViewCount($this->getStoreId(), $productIds);
 
-        foreach ($resultData as $id => $value){
+        foreach ($resultData as $id => $value) {
             $document = $this->getDocument($this->getDocumentId($id));
             $document->addSortNumeric('view_count', $value);
         }
@@ -299,10 +302,13 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
     public function addBestseller(array $productIds)
     {
         $resultData = $this->getResourceModel()->getProductBestsellerCount($this->getStoreId(), $productIds);
-
-        foreach ($resultData as $id => $value){
-            $document = $this->getDocument($this->getDocumentId($id));
-            $document->addSortNumeric('sold_qty', $value);
+        try {
+            foreach ($resultData as $id => $value) {
+                $document = $this->getDocument($this->getDocumentId($id));
+                $document->addSortNumeric('sold_qty', $value);
+            }
+        } catch (\Exception $e) {
+            Mage::logException($e);
         }
     }
 
