@@ -302,7 +302,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             }catch (\Exception $e){
                 Mage::logException($e);
             }catch (\Error $e){
-                Mage::logException($e);
+                Mage::logException((new \Exception($e->getMessage())));
             }
         }
     }
