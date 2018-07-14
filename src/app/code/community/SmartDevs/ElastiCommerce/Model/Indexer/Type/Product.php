@@ -296,22 +296,28 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
         $resultData = $this->getResourceModel()->getProductViewCount($this->getStoreId(), $productIds);
 
         foreach ($resultData as $id => $value) {
-            $document = $this->getDocument($this->getDocumentId($id));
-            $document->addSortNumeric('view_count', $value);
+            try {
+                $document = $this->getDocument($this->getDocumentId($id));
+                $document->addSortNumeric('view_count', $value);
+            }catch (\Exception $e){
+                Mage::logException($e);
+            }
         }
     }
 
     public function addBestseller(array $productIds)
     {
         $resultData = $this->getResourceModel()->getProductBestsellerCount($this->getStoreId(), $productIds);
-        try {
+
             foreach ($resultData as $id => $value) {
-                $document = $this->getDocument($this->getDocumentId($id));
-                $document->addSortNumeric('sold_qty', $value);
+                try {
+                    $document = $this->getDocument($this->getDocumentId($id));
+                    $document->addSortNumeric('sold_qty', $value);
+                } catch (\Exception $e) {
+                    Mage::logException($e);
+                }
             }
-        } catch (\Exception $e) {
-            Mage::logException($e);
-        }
+
     }
 
     /**
