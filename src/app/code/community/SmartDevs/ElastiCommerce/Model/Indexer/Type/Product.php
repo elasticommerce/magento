@@ -301,6 +301,8 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
                 $document->addSortNumeric('view_count', $value);
             }catch (\Exception $e){
                 Mage::logException($e);
+            }catch (\Error $e){
+                Mage::logException($e);
             }
         }
     }
