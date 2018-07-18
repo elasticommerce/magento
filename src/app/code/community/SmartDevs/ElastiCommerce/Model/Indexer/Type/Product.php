@@ -57,12 +57,24 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
     /**
      * get Product chunks for reindex
      *
+     * @param null $start
+     * @param null $end
      * @return array
      */
-    protected function getProductChunks()
+    protected function getProductChunks($start = null, $end = null)
     {
-        $range = $this->getResourceModel()->getProductRange($this->getWebsiteId());
-        $chunks = $this->getChunksByRange((int)$range['start'], (int)$range['end'], $this->getChunkSize());
+        $chunks = [];
+        if(is_null($start) && is_null($end)) {
+            $range = $this->getResourceModel()->getProductRange($this->getWebsiteId());
+            $chunks = $this->getChunksByRange((int)$range['start'], (int)$range['end'], $this->getChunkSize());
+        }else{
+            $chunks[] =
+                [
+                    'from' =>  $start,
+                    'to' => $end
+                ];
+        }
+
         Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Reindexing %u chunks', count($chunks)));
         return $chunks;
     }
@@ -84,6 +96,8 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      *
      * @param array $chunk
      * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
+     *
+     * @throws Exception
      */
     protected function createIndexDocuments()
     {
@@ -248,13 +262,15 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
     /**
      * reindex complete store
      *
-     * @param Mage_Core_Model_Store $store
+     * @param null $start
+     * @param null $end
+     *
      * @return SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
      */
-    public function reindexStore()
+    public function reindexStore($start = null, $end = null)
     {
         $storeTimeStart = microtime(true);
-        foreach ($this->getProductChunks() as $chunk) {
+        foreach ($this->getProductChunks($start, $end) as $chunk) {
             Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Reindexing product chunk %u - %u', $chunk['from'], $chunk['to']));
             // prepare filter table for faster prefiltered queries
             $this->prepareProductPreFilter($chunk);

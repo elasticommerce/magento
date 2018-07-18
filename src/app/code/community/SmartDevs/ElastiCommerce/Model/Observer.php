@@ -43,4 +43,14 @@ class SmartDevs_ElastiCommerce_Model_Observer
         Mage::getSingleton('index/indexer')
             ->processEntityAction($page, 'cms_page', Mage_Index_Model_Event::TYPE_DELETE);
     }
+
+    /**
+     *
+     */
+    public function catalogProductSaveCommitAfter(Varien_Event_Observer $observer)
+    {
+        $product = $observer->getEvent()->getProduct();
+        Mage::getSingleton('index/indexer')
+            ->processEntityAction($product, Mage_Catalog_Model_Product::ENTITY, Mage_Index_Model_Event::TYPE_SAVE);
+    }
 }

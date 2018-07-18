@@ -127,7 +127,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Processor
      * set current store scope
      *
      * @param int|string|Mage_Core_Model_Store $store
-     * @return SmartDevs_ElastiCommerce_Model_Indexer_Facade
+     * @return SmartDevs_ElastiCommerce_Model_Indexer_Processor
      */
     public function setStore($store)
     {
@@ -185,6 +185,34 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Processor
             $this->getIndexerTypeInstance($type)->addTypeMapping();
         }
         return $this;
+    }
+
+    public function reindex($entityId, $type)
+    {
+        /** @var SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract $indexerTypeInstance */
+        $indexerTypeInstance = $this->getIndexerTypeInstance($type);
+        
+        try {
+            $document = $indexerTypeInstance->reindexStore($entityId, $entityId);
+        }catch (\Error $e){
+            if($e instanceof TypeError){
+                return $this;
+            }
+        }
+    }
+
+    public function reindexMultiple($min, $max, $type)
+    {
+        /** @var SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract $indexerTypeInstance */
+        $indexerTypeInstance = $this->getIndexerTypeInstance($type);
+
+        try {
+            $document = $indexerTypeInstance->reindexStore($min, $max);
+        }catch (\Error $e){
+            if($e instanceof TypeError){
+                return $this;
+            }
+        }
     }
 
     /**
