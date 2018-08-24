@@ -250,7 +250,12 @@ abstract class SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract
      */
     public function getDocument(string $docId): SmartDevs_ElastiCommerce_IndexDocument
     {
-        return $this->getBulkCollection()->getItemById($docId);
+        $doc = $this->getBulkCollection()->getItemById($docId);
+        // fixes Return value of SmartDevs_ElastiCommerce_Model_Indexer_Type_Abstract::getDocument() must be an instance of SmartDevs_ElastiCommerce_IndexDocument
+        if ($doc instanceof SmartDevs_ElastiCommerce_IndexDocument) {
+            return $doc;
+        }
+        return $this->createNewDocument((int)$docId);
     }
 
     /**
