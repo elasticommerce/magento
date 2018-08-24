@@ -158,6 +158,7 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
         } else {
             $attributeOptions = [];
         }
+
         foreach ($attributeRawData as $id => $values) {
             /** @var SmartDevs_ElastiCommerce_IndexDocument $document */
             $document = $this->getDocument($this->getDocumentId($id));
@@ -299,6 +300,17 @@ class SmartDevs_ElastiCommerce_Model_Indexer_Type_Product
             //add stock information to chunk
             //$this->addPriceData();
             $timeStart = microtime(true);
+
+            // insert missing products as empty(new) documents in order to remove them
+            // when updating single products e.g. deactivate them, existing documents will not be affected and
+            // remaing visibile in FE until a full reindex with switch of indices is done
+            for ($id = $start; $id<=$end; $id++) {
+                if (!$this->getBulkCollection()->getItemById("product_".$id)) {
+                    $document = $this->createNewDocument((int)$id);
+                    $this->getBulkCollection()->setItem($document);
+                }
+            }
+
             $this->getIndexerClient()->sendBulk();
             $this->getIndexerClient()->getBulk()->clear();
             Mage::helper('elasticommerce/log')->log(Zend_Log::INFO, sprintf('Added chunk data in  %.4f seconds', microtime(true) - $timeStart));
